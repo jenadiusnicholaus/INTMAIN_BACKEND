@@ -18,14 +18,21 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
+from django.conf.urls.static import static
+from markdownx import urls as markdownx
 
-SUFIX = f"api/{settings.API_VERSION}"
+
+SUFFIX = f"api/{settings.API_VERSION}"
 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     # Add your URL patterns here
-    path(f"{SUFIX}/authentication/", include("authentication.urls")),
+    path(f"{SUFFIX}/authentication/", include("authentication.urls")),
     # programs
-    path(f"{SUFIX}/programs/", include("programs.urls")),
+    path(f"{SUFFIX}/programs/", include("programs.urls")),
+    path("markdownx/", include(markdownx)),
 ]
+
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
