@@ -2,18 +2,18 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+from utils.bases_models import BaseModel
 
-class ProgramCategory(models.Model):
+
+class ProgramCategory(BaseModel):
     name = models.CharField(max_length=200)
     description = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
 
 
-class Program(models.Model):
+class Program(BaseModel):
     category = models.ForeignKey(ProgramCategory, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     description = models.TextField()
@@ -21,13 +21,12 @@ class Program(models.Model):
     end_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
     image = models.ImageField(upload_to="programs/images/", blank=True, null=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
 
 
-class UserEnrollmentProgram(models.Model):
+class UserEnrollmentProgram(BaseModel):
     STATUS = (
         ("started", "Started"),
         ("paused", "Paused"),
@@ -37,19 +36,15 @@ class UserEnrollmentProgram(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     progress_percentage = models.IntegerField(default=0)
     program = models.ForeignKey(Program, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.user.username} enrolled in {self.program.name}"
 
 
-class ProgramFeedback(models.Model):
+class ProgramFeedback(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     program = models.ForeignKey(Program, on_delete=models.CASCADE)
     feedback = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.user.username} feedback for {self.program.name}"

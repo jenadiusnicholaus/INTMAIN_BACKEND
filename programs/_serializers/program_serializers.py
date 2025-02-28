@@ -1,5 +1,13 @@
 from authentication.serializers import GetUserSerializer
-from ..models import Program, UserEnrollmentProgram
+from ..models import (
+    Program,
+    UserEnrollmentProgram,
+    ProgramCategory,
+    ProgramModule,
+    ProgramModuleWeek,
+    ProgramFeedback,
+    ProgramModuleWeekLesson,
+)
 from rest_framework import serializers
 
 
@@ -22,19 +30,68 @@ class GetUserEnrollmentProgramSerializer(serializers.ModelSerializer):
     progress_percentage = serializers.IntegerField()
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
     updated_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+    module = serializers.SerializerMethodField()
 
     class Meta:
         model = UserEnrollmentProgram
-        fields = [
-            "user_id",
-            "program_name",
-            "program_description",
-            "program_image",
-            "program_start_date",
-            "program_end_date",
-            "program_category",
-            "status",
-            "progress_percentage",
-            "created_at",
-            "updated_at",
-        ]
+        fields = "__all__"
+
+    def get_module(self, obj):
+        module = ProgramModule.objects.filter(program=obj.program)
+        serializer = GetProgramModuleSerializer(module, many=True)
+        return serializer.data
+
+
+class GetProgramCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramCategory
+        fields = "__all__"
+
+
+class GetProgramModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramModule
+        fields = "__all__"
+
+
+class GetProgramModuleWeekSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramModuleWeek
+        fields = "__all__"
+
+
+class GetProgramFeedbackSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source="user.id")
+    program_name = serializers.CharField(source="program.name")
+    feedback = serializers.CharField()
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+
+    class Meta:
+        model = ProgramFeedback
+        fields = "__all__"
+
+
+class GetProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
+    program_module_week_id = serializers.IntegerField(source="program_module_week.id")
+    program_module_week_name = serializers.CharField(
+        source="program_module_week.program_module.name"
+    )
+    program_module_week_order = serializers.IntegerField(
+        source="program_module_week.order"
+    )
+    name = serializers.CharField()
+    description = serializers.CharField()
+    order = serializers.IntegerField()
+    learning_model = serializers.CharField(source="get_learning_model_display")
+    lession_type = serializers.CharField(source="get_lession_type_display")
+    duration = serializers.IntegerField()
+    is_active = serializers.BooleanField()
+    is_optional = serializers.BooleanField()
+    formatted_markdown = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProgramModuleWeekLesson
+        fields = "__all__"
+
+    def get_formatted_markdown(self, obj):
+        return obj.formatted_markdown()
