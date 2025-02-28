@@ -5,6 +5,7 @@ from ..models import Program
 
 # User
 from django.contrib.auth.models import User
+from markdownx.utils import markdownify
 
 
 class ProgramModule(BaseModel):
@@ -60,6 +61,9 @@ class ProgramModuleWeekLesson(BaseModel):
     class Meta:
         unique_together = ("program_module_week", "name")
         ordering = ["order"]
+
+    def formatted_markdown(self):
+        return markdownify(self.content)
 
 
 class UserLearningLessonStatus(BaseModel):

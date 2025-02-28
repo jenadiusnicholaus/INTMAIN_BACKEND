@@ -29,7 +29,7 @@ SECRET_KEY = "django-insecure-o^mgh3d_za&7214g)9pru&j_sm(%h$)hvx8&jrz8dtc89-d09g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "markdownx",
+    "mdeditor",
 ]
 API_VERSION = "v1.0"
 
@@ -114,6 +115,8 @@ DATABASES = {
         "PORT": config("POSTGRES_PORT"),
     }
 }
+
+X_FRAME_OPTIONS = "SAMEORIGIN"
 
 
 # Password validation

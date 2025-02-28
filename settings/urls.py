@@ -32,6 +32,7 @@ urlpatterns = [
     # programs
     path(f"{SUFFIX}/programs/", include("programs.urls")),
     path("markdownx/", include(markdownx)),
+    path("mdeditor/", include("mdeditor.urls")),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
