@@ -30,13 +30,13 @@ class GetUserEnrollmentProgramSerializer(serializers.ModelSerializer):
     progress_percentage = serializers.IntegerField()
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
     updated_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
-    module = serializers.SerializerMethodField()
+    modules = serializers.SerializerMethodField()
 
     class Meta:
         model = UserEnrollmentProgram
         fields = "__all__"
 
-    def get_module(self, obj):
+    def get_modules(self, obj):
         module = ProgramModule.objects.filter(program=obj.program)
         serializer = GetProgramModuleSerializer(module, many=True)
         return serializer.data
@@ -55,9 +55,18 @@ class GetProgramModuleSerializer(serializers.ModelSerializer):
 
 
 class GetProgramModuleWeekSerializer(serializers.ModelSerializer):
+    week_lessons = serializers.SerializerMethodField()
+
     class Meta:
         model = ProgramModuleWeek
         fields = "__all__"
+
+    def get_week_lessons(self, obj):
+        week_lessons = ProgramModuleWeekLesson.objects.filter(
+            program_module_week=obj.id
+        )
+        serializer = GetProgramModuleWeekLessonSerializer(week_lessons, many=True)
+        return serializer.data
 
 
 class GetProgramFeedbackSerializer(serializers.ModelSerializer):

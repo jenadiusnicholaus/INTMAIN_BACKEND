@@ -29,9 +29,11 @@ class UserEnrolledProgramList(generics.ListAPIView):
     queryset = UserEnrollmentProgram.objects.all()
     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
+    def list(self, request, *args, **kwargs):
         user = self.request.user
-        return self.queryset.filter(user=user)
+        queryset = self.get_queryset().filter(user=user).latest("created_at")
+        serializer = self.get_serializer(queryset)
+        return Response(serializer.data)
 
 
 class ProgramModuleWeekList(generics.ListAPIView):
@@ -39,7 +41,18 @@ class ProgramModuleWeekList(generics.ListAPIView):
     queryset = ProgramModuleWeek.objects.all()
 
     def list(self, request, *args, **kwargs):
-        program_module_id = self.kwargs.get("program_module_id")
-        queryset = self.get_queryset().filter(program_module_id=program_module_id)
-        serializer = self.get_serializer(queryset, many=True)
+        program_module_id = self.request.query_params.get("program_module_id")
+        if not program_module_id:
+            return Response(
+                {"massage": "program_module_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        queryset = (
+            self.get_queryset()
+            .filter(program_module_id=program_module_id)
+            .order_by("order")
+        )
+        serializer = self.get_serializer(
+            queryset, many=True, context={"request": request}
+        )
         return Response(serializer.data)

@@ -35,21 +35,3 @@ class BaseModel(models.Model):
         abstract = True
 
 
-# class MenuMeta(models.Model):
-#     parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True)
-#     order = models.IntegerField(default=0)
-
-
-# class Menu(models.Model):
-#     name = models.CharField(max_length=255)
-#     url = models.CharField(max_length=255)
-#     icon = models.CharField(max_length=255)
-#     parent = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True)
-#     order = models.IntegerField(default=0)
-#     meta = models.ManyToManyField(MenuMeta)
-
-#     class Meta:
-#         abstract = True
-
-#     def __str__(self):
-#         return self.name

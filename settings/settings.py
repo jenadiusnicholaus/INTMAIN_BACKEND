@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "markdownx",
     "mdeditor",
     "corsheaders",
+    "menu_manager",
 ]
 API_VERSION = "v1.0"
 

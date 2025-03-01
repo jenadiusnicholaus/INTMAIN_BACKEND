@@ -63,7 +63,7 @@ class ProgramModuleWeekLesson(BaseModel):
         ordering = ["order"]
 
     def formatted_markdown(self):
-        return markdownify(self.content)
+        return markdownify(self.description)
 
 
 class UserLearningLessonStatus(BaseModel):
