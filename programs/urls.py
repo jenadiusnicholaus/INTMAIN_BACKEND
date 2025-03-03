@@ -1,7 +1,12 @@
 # Routers provide an easy way of automatically determining the URL conf.
 from django.urls import include, path
 from rest_framework import routers
-from .views import ProgramList, UserEnrolledProgramList, ProgramModuleWeekList
+from .views import (
+    ProgramList,
+    UserEnrolledProgramList,
+    ProgramModuleWeekList,
+    UserLearningLesson,
+)
 
 
 router = routers.DefaultRouter()
@@ -18,5 +23,10 @@ urlpatterns = [
         "program-module-week-list/",
         ProgramModuleWeekList.as_view(),
         name="program-module-week-list",
+    ),
+    path(
+        "user-learning-lesson-list/",
+        UserLearningLesson.as_view(),
+        name="user-learning-lesson",
     ),
 ]

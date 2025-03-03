@@ -3,7 +3,7 @@ from .models import Menu, MenuMeta
 
 
 class MenuMetaAdmin(admin.ModelAdmin):
-    list_display = ("icon", "title", "order")
+    list_display = ("icon",)
 
 
 class MenuAdmin(admin.ModelAdmin):

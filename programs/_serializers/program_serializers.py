@@ -1,4 +1,5 @@
 from authentication.serializers import GetUserSerializer
+from menu_manager.models import MenuMeta
 from ..models import (
     Program,
     UserEnrollmentProgram,
@@ -11,6 +12,12 @@ from ..models import (
 from rest_framework import serializers
 
 
+class GetMenuMetaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MenuMeta
+        fields = ["icon"]
+
+
 class GetProgramSerializer(serializers.ModelSerializer):
     class Meta:
         model = Program
@@ -19,22 +26,11 @@ class GetProgramSerializer(serializers.ModelSerializer):
 
 
 class GetUserEnrollmentProgramSerializer(serializers.ModelSerializer):
-    user_id = serializers.IntegerField(source="user.id")
-    program_name = serializers.CharField(source="program.name")
-    program_description = serializers.CharField(source="program.description")
-    program_image = serializers.ImageField(source="program.image")
-    program_start_date = serializers.DateField(source="program.start_date")
-    program_end_date = serializers.DateField(source="program.end_date")
-    program_category = serializers.CharField(source="program.category.name")
-    status = serializers.CharField(source="get_status_display")
-    progress_percentage = serializers.IntegerField()
-    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
-    updated_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
     modules = serializers.SerializerMethodField()
 
     class Meta:
         model = UserEnrollmentProgram
-        fields = "__all__"
+        fields = ["modules"]
 
     def get_modules(self, obj):
         module = ProgramModule.objects.filter(program=obj.program)
@@ -49,24 +45,30 @@ class GetProgramCategorySerializer(serializers.ModelSerializer):
 
 
 class GetProgramModuleSerializer(serializers.ModelSerializer):
+
+    # children are module weeks
+
+    children = serializers.SerializerMethodField()
+    meta = GetMenuMetaSerializer()
+
     class Meta:
         model = ProgramModule
-        fields = "__all__"
+        fields = ["id", "name", "display_name", "order", "children", "meta"]
+
+    def get_children(self, obj):
+        children = ProgramModuleWeek.objects.filter(program_module=obj.id).order_by(
+            "order"
+        )
+        serializer = GetProgramModuleWeekSerializer(children, many=True)
+        return serializer.data
 
 
 class GetProgramModuleWeekSerializer(serializers.ModelSerializer):
-    week_lessons = serializers.SerializerMethodField()
+    meta = GetMenuMetaSerializer()
 
     class Meta:
         model = ProgramModuleWeek
-        fields = "__all__"
-
-    def get_week_lessons(self, obj):
-        week_lessons = ProgramModuleWeekLesson.objects.filter(
-            program_module_week=obj.id
-        )
-        serializer = GetProgramModuleWeekLessonSerializer(week_lessons, many=True)
-        return serializer.data
+        fields = ["id", "name", "display_name", "order", "meta"]
 
 
 class GetProgramFeedbackSerializer(serializers.ModelSerializer):
@@ -103,4 +105,24 @@ class GetProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_formatted_markdown(self, obj):
-        return obj.formatted_markdown()
+        request = self.context.get("request")
+        if request:
+            # Replace relative URLs with absolute URLs
+            base_url = request.build_absolute_uri("/")
+            formatted_markdown = obj.formatted_markdown().replace(
+                "/media/", f"{base_url}media/"
+            )
+            return formatted_markdown
+        return obj.formatted_markdown
+
+    # update description media urls to absolute urls
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get("request")
+        if request:
+            # Replace relative URLs with absolute URLs
+            base_url = request.build_absolute_uri("/")
+            data["description"] = data["description"].replace(
+                "/media/", f"{base_url}media/"
+            )
+        return data
