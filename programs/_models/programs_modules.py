@@ -58,7 +58,7 @@ class ProgramModuleWeekLesson(BaseModel):
     )
 
     program_module_week = models.ForeignKey(ProgramModuleWeek, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=300, blank=True)
     description = MarkdownxField(blank=True, null=True)
     order = models.IntegerField(default=0)
     learning_model = models.CharField(
