@@ -29,6 +29,7 @@ class Program(BaseModel):
 class UserEnrollmentProgram(BaseModel):
     STATUS = (
         ("started", "Started"),
+        ("pending", "Pending"),
         ("paused", "Paused"),
         ("completed", "Completed"),
     )

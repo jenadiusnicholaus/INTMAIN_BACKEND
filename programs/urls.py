@@ -6,10 +6,14 @@ from .views import (
     UserEnrolledProgramList,
     ProgramModuleWeekList,
     UserLearningLesson,
+    PrgrammerEnrollment,
 )
 
 
 router = routers.DefaultRouter()
+router.register(
+    r"program-enrollment", PrgrammerEnrollment, basename="program-enrollment"
+)
 
 urlpatterns = [
     path("", include(router.urls)),

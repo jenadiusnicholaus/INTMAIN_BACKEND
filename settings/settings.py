@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "mdeditor",
     "corsheaders",
     "menu_manager",
+    "authentication",
 ]
 API_VERSION = "v1.0"
 
@@ -73,7 +74,7 @@ ROOT_URLCONF = "settings.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

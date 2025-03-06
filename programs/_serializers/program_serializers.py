@@ -38,6 +38,12 @@ class GetUserEnrollmentProgramSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
+class CreateUserEnrollmentProgramSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserEnrollmentProgram
+        fields = "__all__"
+
+
 class GetProgramCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProgramCategory
