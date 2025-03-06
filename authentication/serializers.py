@@ -26,7 +26,14 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("password", "password2", "email")
+        fields = (
+            "password",
+            "password2",
+            "email",
+            "username",
+            "first_name",
+            "last_name",
+        )
 
     def validate(self, attrs):
         """Ensure passwords match"""
@@ -37,11 +44,16 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        """Create a user instance"""
-        user = User.objects.create(email=validated_data.get("email", ""))
-        user.set_password(validated_data.get("password"))
-        user.is_active = False
-        user.is_staff = False
-        user.is_superuser = False
+        user = User.objects.create(
+            username=validated_data["username"],
+            email=validated_data["email"],
+            first_name=validated_data["first_name"],
+            last_name=validated_data["last_name"],
+            is_active=False,
+            is_staff=False,
+        )
+
+        user.set_password(validated_data["password"])
         user.save()
+
         return user

@@ -99,6 +99,7 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 100,
+    "EXCEPTION_HANDLER": "utils.custom_exception_handler.custom_exception_handler",
 }
 
 WSGI_APPLICATION = "settings.wsgi.application"
@@ -166,6 +167,17 @@ STATIC_URL = "static/"
 MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+
+## Emailing settings
+# Email configuration
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="no_email")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="no_password")
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

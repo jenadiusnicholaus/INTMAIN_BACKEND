@@ -46,23 +46,21 @@ class RegisterView(generics.CreateAPIView):
             "email": request.data.get("email"),
         }
         serializer = self.get_serializer(data=data)
+
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            raise serializers.ValidationError(serializer.errors)
         user = serializer.save()
 
         VerificationCode.objects.create(
             user=user, code=otp, created_at=timezone.localtime(timezone.now())
         )
+
         if user:
             try:
                 EmailSender.send_otp_email(user, otp)
             except Exception as e:
                 user.delete()
-                print(e)
-                return Response(
-                    {"message": "Error sending email"},
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                )
+                raise serializers.ValidationError(f"Error sending email {e}")
 
         masked_email = self.mask_email(request.data.get("email"))
         message = f"User created successfully. A verification code has been sent to your email ({masked_email}). Please verify your account immediately before the session expires in 10 minutes."
@@ -77,26 +75,20 @@ class ResendOtpView(APIView):
 
     def post(self, request):
         otp = random.randint(100000, 999999)
-
+        if not request.data.get("email"):
+            raise serializers.ValidationError("Email is required")
         try:
             user = User.objects.get(email=request.data.get("email"))
         except User.DoesNotExist:
-            return Response(
-                {"message": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST
-            )
-
+            raise serializers.ValidationError("User does not exist")
         try:
             verification_model = VerificationCode.objects.get(user=user)
         except VerificationCode.DoesNotExist:
-            return Response(
-                {"message": "No verification code found for the given user"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            raise serializers.ValidationError("Verification code does not exist")
 
         if user.is_active:
-            return Response(
-                {"message": "ACCOUNT ALREADY ACTIVATED, NO NEED TO RESEND OTP"},
-                status=status.HTTP_400_BAD_REQUEST,
+            raise serializers.ValidationError(
+                "ACCOUNT ALREADY ACTIVATED, NO NEED TO RESEND OTP"
             )
 
         time_remaining = (
@@ -106,12 +98,8 @@ class ResendOtpView(APIView):
         )
         if time_remaining > timedelta(minutes=0):
 
-            # If the time remaining is more than 0, return an error with the time remaining
-            return Response(
-                {
-                    "message": f"PLEASE WAIT FOR {time_remaining.seconds // 60} MINUTES AND {time_remaining.seconds % 60} SECONDS BEFORE SENDING ANOTHER OTP"
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+            raise serializers.ValidationError(
+                f"PLEASE WAIT FOR {time_remaining.seconds // 60} MINUTES AND {time_remaining.seconds % 60} SECONDS BEFORE SENDING ANOTHER OTP"
             )
 
         verification_model.code = otp
@@ -121,11 +109,7 @@ class ResendOtpView(APIView):
         try:
             EmailSender.send_otp_email(user, otp)
         except Exception as e:
-            print(e)
-            return Response(
-                {"message": "Error sending email"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            raise serializers.ValidationError(f"Error sending email {e}")
         return Response({"message": "OTP SENT SUCCESSFULLY"}, status=status.HTTP_200_OK)
 
 
@@ -133,13 +117,16 @@ class ActivateAccountView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        if not request.data.get("email") or not request.data.get("otp"):
+            return Response(
+                {"message": "Email and OTP are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         try:
             user = User.objects.get(email=request.data.get("email"))
         except User.DoesNotExist:
-            return Response(
-                {"message": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST
-            )
+            raise serializers.ValidationError("User does not exist")
         if user.is_active:
             return Response(
                 {"message": "ACCOUNT ALREADY ACTIVATED"},
