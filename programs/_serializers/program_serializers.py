@@ -1,5 +1,6 @@
 from authentication.serializers import GetUserSerializer
 from menu_manager.models import MenuMeta
+from programs._models.programs_modules import UserLearningLessonStatus
 from ..models import (
     Program,
     UserEnrollmentProgram,
@@ -59,7 +60,15 @@ class GetProgramModuleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProgramModule
-        fields = ["id", "name", "display_name", "order", "children", "meta"]
+        fields = [
+            "id",
+            "name",
+            "display_name",
+            "order",
+            "children",
+            "meta",
+            "description",
+        ]
 
     def get_children(self, obj):
         children = ProgramModuleWeek.objects.filter(program_module=obj.id).order_by(
@@ -74,7 +83,7 @@ class GetProgramModuleWeekSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProgramModuleWeek
-        fields = ["id", "name", "display_name", "order", "meta"]
+        fields = ["id", "name", "display_name", "order", "meta", "description"]
 
 
 class GetProgramFeedbackSerializer(serializers.ModelSerializer):
@@ -93,6 +102,10 @@ class GetProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
     program_module_week_name = serializers.CharField(
         source="program_module_week.program_module.name"
     )
+    # program_module_week_description = serializers.CharField(
+    #     source="program_module_week.program_module.description"
+    # )
+
     program_module_week_order = serializers.IntegerField(
         source="program_module_week.order"
     )
@@ -105,6 +118,12 @@ class GetProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
     is_active = serializers.BooleanField()
     is_optional = serializers.BooleanField()
     formatted_markdown = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+
+    def get_status(self, obj):
+        status = obj.lesson_status.filter(user=self.context.get("request").user).first()
+        sz = GetUserLearningLessonStatusSerializer(status)
+        return sz.data["status"] if status else "NOT_STARTED"
 
     class Meta:
         model = ProgramModuleWeekLesson
@@ -132,3 +151,21 @@ class GetProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
                 "/media/", f"{base_url}media/"
             )
         return data
+
+
+class GetUserLearningLessonStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserLearningLessonStatus
+        fields = ["status"]
+
+
+class CreateUserLearningLessonStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserLearningLessonStatus
+        fields = "__all__"
+
+
+class CreateProgramFeedbackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramFeedback
+        fields = "__all__"

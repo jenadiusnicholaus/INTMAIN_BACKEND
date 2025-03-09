@@ -30,6 +30,7 @@ class ProgramModuleWeek(BaseModel):
     week = models.IntegerField(default=0)
     name = models.CharField(max_length=255, null=True, blank=True)
     display_name = models.CharField(max_length=255, blank=True, null=True)
+    description = MarkdownxField(blank=True, null=True)
     meta = models.ForeignKey(MenuMeta, on_delete=models.CASCADE, blank=True, null=True)
     order = models.IntegerField(default=0)
 
@@ -95,7 +96,7 @@ class UserLearningLessonStatus(BaseModel):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     program_module_week_lesson = models.ForeignKey(
-        ProgramModuleWeekLesson, on_delete=models.CASCADE
+        ProgramModuleWeekLesson, on_delete=models.CASCADE, related_name="lesson_status"
     )
     status = models.CharField(max_length=40, choices=STATUS, default="NOT_STARTED")
 
