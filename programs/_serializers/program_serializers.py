@@ -1,5 +1,6 @@
 from authentication.serializers import GetUserSerializer
 from menu_manager.models import MenuMeta
+from programs._models.programs import ProgramMoreInfo, ProgramRating, ProgramStack
 from programs._models.programs_modules import UserLearningLessonStatus
 from ..models import (
     Program,
@@ -11,6 +12,7 @@ from ..models import (
     ProgramModuleWeekLesson,
 )
 from rest_framework import serializers
+from django.db import models
 
 
 class GetMenuMetaSerializer(serializers.ModelSerializer):
@@ -23,6 +25,51 @@ class GetProgramSerializer(serializers.ModelSerializer):
     class Meta:
         model = Program
         depth = 1
+        fields = "__all__"
+
+
+class GetProgramDetailSerializer(serializers.ModelSerializer):
+    stacks = serializers.SerializerMethodField()
+    details = serializers.SerializerMethodField()
+    modules = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField()
+
+    def get_details(self, obj):
+        more_info = obj.more_info_set.filter().first()
+        serializer = GetProgramMoreInfoSerializer(more_info)
+        return serializer.data["more_info"]
+
+    def get_stacks(self, obj):
+        stacks = obj.program_stacks.all()
+        serializer = GetProgramStackSerializer(stacks, many=True)
+        return serializer.data
+
+    def get_rating(self, obj):
+        return (
+            obj.ratings.all().aggregate(models.Avg("rating"))["rating__avg"]
+            if obj.ratings.all().exists()
+            else 0.0
+        )
+
+    class Meta:
+        model = Program
+        fields = "__all__"
+
+    def get_modules(self, obj):
+        modules = ProgramModule.objects.filter(program=obj)
+        serializer = GetProgramModuleSerializer(modules, many=True)
+        return serializer.data
+
+
+class GetProgramStackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramStack
+        fields = ["name", "description"]
+
+
+class GetProgramMoreInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramMoreInfo
         fields = "__all__"
 
 
@@ -48,6 +95,12 @@ class CreateUserEnrollmentProgramSerializer(serializers.ModelSerializer):
 class GetProgramCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProgramCategory
+        fields = "__all__"
+
+
+class GetProgramRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramRating
         fields = "__all__"
 
 

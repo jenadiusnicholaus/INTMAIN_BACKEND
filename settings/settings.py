@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "menu_manager",
     "authentication",
+    "common",
 ]
 API_VERSION = "v1.0"
 

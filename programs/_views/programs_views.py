@@ -5,6 +5,7 @@ from programs._models.programs import UserEnrollmentProgram
 from programs._models.programs_modules import ProgramModuleWeek, ProgramModuleWeekLesson
 from programs._serializers.program_serializers import (
     CreateUserEnrollmentProgramSerializer,
+    GetProgramDetailSerializer,
     GetProgramModuleWeekLessonSerializer,
     GetProgramModuleWeekSerializer,
     GetUserEnrollmentProgramSerializer,
@@ -26,6 +27,17 @@ class ProgramList(generics.ListCreateAPIView):
     def list(self, request):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class ProgramDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Program.objects.all()
+    serializer_class = GetProgramDetailSerializer
+    permission_classes = []
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
 

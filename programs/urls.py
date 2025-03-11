@@ -1,6 +1,8 @@
 # Routers provide an easy way of automatically determining the URL conf.
 from django.urls import include, path
 from rest_framework import routers
+
+from programs._views.programs_views import ProgramDetail
 from .views import (
     ProgramList,
     UserEnrolledProgramList,
@@ -14,6 +16,7 @@ router = routers.DefaultRouter()
 router.register(
     r"program-enrollment", PrgrammerEnrollment, basename="program-enrollment"
 )
+
 
 urlpatterns = [
     path("", include(router.urls)),
@@ -32,5 +35,10 @@ urlpatterns = [
         "user-learning-lesson-list/",
         UserLearningLesson.as_view(),
         name="user-learning-lesson",
+    ),
+    path(
+        "program-detail/<int:pk>/",
+        ProgramDetail.as_view(),
+        name="program-detail",
     ),
 ]

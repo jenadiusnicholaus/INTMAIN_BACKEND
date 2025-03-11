@@ -21,9 +21,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from markdownx import urls as markdownx
 
-
 SUFFIX = f"api/{settings.API_VERSION}"
-
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -34,6 +32,7 @@ urlpatterns = [
     path("markdownx/", include(markdownx)),
     path("mdeditor/", include("mdeditor.urls")),
     path("menu_manager/", include("menu_manager.urls")),
+    path("common/", include("common.urls")),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
