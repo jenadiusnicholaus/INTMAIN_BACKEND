@@ -86,6 +86,8 @@ class UserEnrollmentProgram(BaseModel):
 
     def __str__(self):
         return f"{self.user.username} enrolled in {self.program.name}"
+    
+    
 
 
 class ProgramFeedback(BaseModel):

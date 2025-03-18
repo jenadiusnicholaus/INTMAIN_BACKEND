@@ -166,7 +166,7 @@ class GetProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
     description = serializers.CharField()
     order = serializers.IntegerField()
     learning_model = serializers.CharField(source="get_learning_model_display")
-    lession_type = serializers.CharField(source="get_lession_type_display")
+    lesson_type = serializers.CharField(source="get_lesson_type_display")
     duration = serializers.IntegerField()
     is_active = serializers.BooleanField()
     is_optional = serializers.BooleanField()

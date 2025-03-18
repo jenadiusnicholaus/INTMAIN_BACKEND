@@ -139,3 +139,17 @@ class PrgrammerEnrollment(viewsets.ModelViewSet):
             {"message": "User enrolled in program successfully"},
             status=status.HTTP_201_CREATED,
         )
+
+
+# class UpdateLessonLearnedStatus(generics.UpdateAPIView):
+#     serializer_class = GetUserLearningLessonStatusSerializer
+#     queryset = UserLearningLessonStatus.objects.all()
+#     permission_classes = [IsAuthenticated]
+
+#     def update(self, request, *args, **kwargs):
+#         instance = self.get_object()
+#         serializer = self.get_serializer(instance, data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         serializer.save()
+#         return Response(serializer.data)

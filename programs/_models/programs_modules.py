@@ -4,7 +4,6 @@ from django.db import models
 from markdownx.models import MarkdownxField
 from ..models import Program
 
-# User
 from django.contrib.auth.models import User
 from markdownx.utils import markdownify
 
@@ -50,7 +49,7 @@ class ProgramModuleWeekLesson(BaseModel):
         ("HYBRID", "Hybrid"),
     )
 
-    LESSION_TYPE = (
+    LESSON_TYPE = (
         ("NORMAL", "Normal"),
         ("QUIZ", "Quiz"),
         ("WEEKLY_CAPSTONE", "Weekly Capstone"),
@@ -65,9 +64,7 @@ class ProgramModuleWeekLesson(BaseModel):
     learning_model = models.CharField(
         max_length=40, choices=LEARNING_MODEL, default="SOLO"
     )
-    lession_type = models.CharField(
-        max_length=40, choices=LESSION_TYPE, default="NORMAL"
-    )
+    lesson_type = models.CharField(max_length=40, choices=LESSON_TYPE, default="NORMAL")
     duration = models.IntegerField(default=0)
     is_active = models.BooleanField(default=True)
     is_optional = models.BooleanField(default=False)
