@@ -33,6 +33,7 @@ class GetProgramDetailSerializer(serializers.ModelSerializer):
     details = serializers.SerializerMethodField()
     modules = serializers.SerializerMethodField()
     rating = serializers.SerializerMethodField()
+    level = serializers.CharField(source="get_level_display")
 
     def get_details(self, obj):
         more_info = obj.more_info_set.filter().first()
@@ -53,7 +54,15 @@ class GetProgramDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Program
-        fields = ["stacks", "details", "modules", "rating"]
+        fields = [
+            "id",
+            "name",
+            "stacks",
+            "details",
+            "modules",
+            "rating",
+            "level",
+        ]
 
     def get_modules(self, obj):
         modules = ProgramModule.objects.filter(program=obj)
