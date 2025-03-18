@@ -54,20 +54,24 @@ class GetProgramDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Program
-        fields = [
-            "id",
-            "name",
-            "stacks",
-            "details",
-            "modules",
-            "rating",
-            "level",
-        ]
+
+        exclude = (
+            "description",
+            "created_at",
+            "updated_at",
+            "deleted_at",
+            "created_by",
+            "updated_by",
+            "deleted_by",
+        )
 
     def get_modules(self, obj):
-        modules = ProgramModule.objects.filter(program=obj)
-        serializer = GetDUserEnrollmentProgramSerializer(modules, many=True)
-        return serializer.data
+
+        modules = ProgramModule.objects.filter(program=obj.id).order_by("order").first()
+        serializer = GetDUserEnrollmentProgramSerializer(
+            modules,
+        )
+        return serializer.data.get("modules")
 
 
 class GetProgramStackSerializer(serializers.ModelSerializer):
