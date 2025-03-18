@@ -9,6 +9,7 @@ from .views import (
     ProgramModuleWeekList,
     UserLearningLesson,
     PrgrammerEnrollment,
+    LessonStatusViewSet,
 )
 
 
@@ -16,6 +17,7 @@ router = routers.DefaultRouter()
 router.register(
     r"program-enrollment", PrgrammerEnrollment, basename="program-enrollment"
 )
+router.register(r"lesson-status", LessonStatusViewSet, basename="lesson-status")
 
 
 urlpatterns = [

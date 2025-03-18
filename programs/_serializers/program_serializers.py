@@ -53,11 +53,11 @@ class GetProgramDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Program
-        fields = "__all__"
+        fields = ["stacks", "details", "modules", "rating"]
 
     def get_modules(self, obj):
         modules = ProgramModule.objects.filter(program=obj)
-        serializer = GetProgramModuleSerializer(modules, many=True)
+        serializer = GetDUserEnrollmentProgramSerializer(modules, many=True)
         return serializer.data
 
 
@@ -83,6 +83,23 @@ class GetUserEnrollmentProgramSerializer(serializers.ModelSerializer):
     def get_modules(self, obj):
         module = ProgramModule.objects.filter(program=obj.program)
         serializer = GetProgramModuleSerializer(module, many=True)
+        return serializer.data
+
+
+class GetDUserEnrollmentProgramSerializer(serializers.ModelSerializer):
+    """
+    Serializer for UserEnrollmentProgram with modules as ProgramModule
+    """
+
+    modules = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserEnrollmentProgram
+        fields = ["modules"]
+
+    def get_modules(self, obj):
+        module = ProgramModule.objects.filter(program=obj.program)
+        serializer = GetDProgramModuleSerializer(module, many=True)
         return serializer.data
 
 
@@ -129,6 +146,53 @@ class GetProgramModuleSerializer(serializers.ModelSerializer):
         )
         serializer = GetProgramModuleWeekSerializer(children, many=True)
         return serializer.data
+
+
+# redant Serializer for ProgramModuleWeekLesson
+class GetDProgramModuleSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ProgramModule with children as ProgramModuleWeek"""
+
+    # children are module weeks
+
+    children = serializers.SerializerMethodField()
+    meta = GetMenuMetaSerializer()
+
+    class Meta:
+        model = ProgramModule
+        fields = [
+            "id",
+            "name",
+            "display_name",
+            # "description",
+            "order",
+            "children",
+            "meta",
+        ]
+
+    def get_children(self, obj):
+        children = ProgramModuleWeek.objects.filter(program_module=obj.id).order_by(
+            "order"
+        )
+        serializer = GetDProgramModuleWeekSerializer(children, many=True)
+        return serializer.data
+
+
+class GetDProgramModuleWeekSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ProgramModuleWeek with children as ProgramModuleWeekLesson"""
+
+    meta = GetMenuMetaSerializer()
+
+    class Meta:
+        model = ProgramModuleWeek
+        fields = [
+            "id",
+            "name",
+            "display_name",
+            "order",
+            "meta",
+        ]
 
 
 class GetProgramModuleWeekSerializer(serializers.ModelSerializer):
@@ -213,6 +277,12 @@ class GetUserLearningLessonStatusSerializer(serializers.ModelSerializer):
 
 
 class CreateUserLearningLessonStatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserLearningLessonStatus
+        fields = "__all__"
+
+
+class UpdateUserLearningLessonStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserLearningLessonStatus
         fields = "__all__"
