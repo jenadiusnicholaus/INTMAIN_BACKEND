@@ -177,7 +177,7 @@ class GetDProgramModuleSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "display_name",
-            # "description",
+            "description",
             "order",
             "children",
             "meta",

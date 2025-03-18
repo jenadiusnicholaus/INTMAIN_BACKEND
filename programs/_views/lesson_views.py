@@ -11,7 +11,7 @@ from rest_framework import status
 from datetime import datetime
 
 
-class LessonStatusViewSet(generics.RetrieveUpdateAPIView, viewsets.GenericViewSet):
+class LessonStatusViewSet(viewsets.ModelViewSet):
     serializer_class = GetUserLearningLessonStatusSerializer
     queryset = UserLearningLessonStatus.objects.all()
 
@@ -31,12 +31,12 @@ class LessonStatusViewSet(generics.RetrieveUpdateAPIView, viewsets.GenericViewSe
         )
         return object
 
-    def retrieve(self, request, *args, **kwargs):
+    def list(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
-    def update(self, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
 
         data = {
             "status": self.request.data.get("status"),
