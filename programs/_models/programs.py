@@ -82,12 +82,16 @@ class UserEnrollmentProgram(BaseModel):
     status = models.CharField(max_length=10, choices=STATUS, default="pending")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     progress_percentage = models.IntegerField(default=0)
-    program = models.ForeignKey(Program, on_delete=models.CASCADE)
+    program = models.ForeignKey(
+        Program,
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        unique_together = ("user", "program")
 
     def __str__(self):
         return f"{self.user.username} enrolled in {self.program.name}"
-    
-    
 
 
 class ProgramFeedback(BaseModel):

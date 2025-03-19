@@ -120,12 +120,37 @@ class PrgrammerEnrollment(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         # CreateUserEnrollmentProgramSerializer
+
         user_enrollment_program_data = {
             "user": request.user.id,
             "program": request.data.get("program_id"),
             "status": "pending",
             "progress_percentage": 0,
         }
+
+        enrolledProgram = UserEnrollmentProgram.objects.filter(
+            user=request.user, program__id=request.data.get("program_id")
+        )
+        if enrolledProgram.exists():
+            return Response(
+                {
+                    "message": "You are already enrolled in this program, Go to your dashboard to continue learning, Enjoy!",
+                    "is_enrolled": True,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        any_enrolled_program = UserEnrollmentProgram.objects.filter(user=request.user)
+
+        if any_enrolled_program.exists():
+            if any_enrolled_program.first().status != "completed":
+                return Response(
+                    {
+                        "message": "Your Program is not completed yet, you can not enroll to another program",
+                        "is_enrolled": True,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         serializer = CreateUserEnrollmentProgramSerializer(
             data=user_enrollment_program_data
