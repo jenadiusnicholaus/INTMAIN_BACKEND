@@ -29,6 +29,7 @@ urlpatterns = [
     path(f"{SUFFIX}/authentication/", include("authentication.urls")),
     # programs
     path(f"{SUFFIX}/programs/", include("programs.urls")),
+    path(f"{SUFFIX}/AI/", include("AI.urls")),
     path("markdownx/", include(markdownx)),
     path("mdeditor/", include("mdeditor.urls")),
     path("menu_manager/", include("menu_manager.urls")),

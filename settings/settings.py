@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "menu_manager",
     "authentication",
     "common",
+    "AI",
 ]
 API_VERSION = "v1.0"
 
@@ -221,3 +222,6 @@ SIMPLE_JWT = {
 }
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
+
+
+DEEPSEEK_API_KEY = config("DEEPSEEK_API_KEY", default="no_api_key")

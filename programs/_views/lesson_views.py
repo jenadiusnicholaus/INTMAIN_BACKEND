@@ -9,6 +9,7 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from datetime import datetime
+from django.utils import timezone
 
 
 class LessonStatusViewSet(viewsets.ModelViewSet):
@@ -37,16 +38,39 @@ class LessonStatusViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def put(self, request, *args, **kwargs):
+        user = self.request.user
+        if not user.is_authenticated:
+            return Response(
+                {"error": "User is not authenticated"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        request_data = self.request.data
+        status_value = request_data.get("status")
+        pr_url = request_data.get("pr_url")
+        pr_description = request_data.get("pr_description")
+        is_to_be_reviewed = request_data.get("is_to_be_reviewed")
 
         data = {
-            "status": self.request.data.get("status"),
-            "updated_at": datetime.now(),
-            "updated_by": self.request.user.id,
+            "status": status_value,
+            "updated_at": timezone.now(),
+            "updated_by": user.id,
         }
+
+        if is_to_be_reviewed:
+            data.update(
+                {
+                    "is_to_be_reviewed": True,
+                    "pr_url": pr_url,
+                    "pr_description": pr_description,
+                }
+            )
+
         serializer = UpdateUserLearningLessonStatusSerializer(
             data=data, instance=self.get_object(), partial=True
         )
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)

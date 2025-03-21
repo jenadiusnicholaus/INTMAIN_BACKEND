@@ -96,6 +96,9 @@ class UserLearningLessonStatus(BaseModel):
         ProgramModuleWeekLesson, on_delete=models.CASCADE, related_name="lesson_status"
     )
     status = models.CharField(max_length=40, choices=STATUS, default="NOT_STARTED")
+    is_to_be_reviewed = models.BooleanField(default=False)
+    pr_url = models.URLField(blank=True, null=True)
+    pr_description = models.TextField(blank=True, null=True)
 
     class Meta:
         unique_together = ("user", "program_module_week_lesson")
