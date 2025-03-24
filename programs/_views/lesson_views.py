@@ -39,6 +39,18 @@ class LessonStatusViewSet(viewsets.ModelViewSet):
 
     def put(self, request, *args, **kwargs):
         user = self.request.user
+
+        try:
+
+            object = UserLearningLessonStatus.objects.get(
+                user=user,
+                program_module_week_lesson_id=self.request.query_params.get(
+                    "program_module_week_lesson_id"
+                ),
+            )
+        except UserLearningLessonStatus.DoesNotExist:
+            raise Exception("UserLearningLessonStatus does not exist")
+
         if not user.is_authenticated:
             return Response(
                 {"error": "User is not authenticated"},
