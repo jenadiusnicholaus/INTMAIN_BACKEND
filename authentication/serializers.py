@@ -5,11 +5,60 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth.password_validation import validate_password
 
+from authentication.models import UserProfile
+
 
 class GetUserSerializer(serializers.HyperlinkedModelSerializer):
+    phone_number = serializers.CharField(
+        source="user_profile.phone_number", read_only=True
+    )
+    user_type = serializers.CharField(
+        source="user_profile.user_type.name", read_only=True
+    )
+    permissions = serializers.SerializerMethodField()
+
+    user_groups = serializers.SerializerMethodField()
+
+    group_permissions = serializers.SerializerMethodField()
+
+    def get_user_groups(self, obj):
+        """Get all groups of user"""
+        groups = obj.groups.all()
+        # make group name the uppercase
+        groups = [group.name.upper() for group in groups]
+        return groups
+
+    def get_group_permissions(self, obj):
+        """Get all group permissions of user"""
+        group_permissions = []
+        for group in obj.groups.all():
+            group_permissions += list(group.permissions.all())
+        # make code name the uppercase
+        group_permissions = [
+            permission.codename.upper() for permission in group_permissions
+        ]
+        return group_permissions
+
+    def get_permissions(self, obj):
+        """Get all permissions of user"""
+        permissions = obj.user_permissions.all()
+        # make code name the uppercase
+        permissions = [permission.codename.upper() for permission in permissions]
+        return permissions
+
     class Meta:
         model = User
-        fields = ["url", "username", "email", "is_staff"]
+        fields = [
+            "url",
+            "username",
+            "email",
+            "is_staff",
+            "phone_number",
+            "user_type",
+            "user_groups",
+            "group_permissions",
+            "permissions",
+        ]
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -57,3 +106,21 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+
+
+class GetUserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = "__all__"
+
+
+class CreateUserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = "__all__"
+
+
+class UpdateUserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = "__all__"

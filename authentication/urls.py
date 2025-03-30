@@ -16,7 +16,7 @@ from rest_framework_simplejwt.views import (
 
 
 router = routers.DefaultRouter()
-router.register(r"users", UserViewSet)
+router.register(r"user", UserViewSet)
 
 
 urlpatterns = [

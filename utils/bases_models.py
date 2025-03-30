@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django_softdelete.models import SoftDeleteModel
+
 
 # timezone
 from django.utils import timezone
@@ -35,3 +37,15 @@ class BaseModel(models.Model):
         abstract = True
 
 
+class BaseSoftDeleteModel(SoftDeleteModel, models.Model):
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    deleted_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="%(class)s_deleted_by",
+        null=True,
+        blank=True,
+    )
+
+    class Meta:
+        abstract = True

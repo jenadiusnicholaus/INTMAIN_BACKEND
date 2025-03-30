@@ -1,4 +1,5 @@
 from menu_manager.models import MenuMeta
+from payments.models import Packages, Payment
 from utils.bases_models import BaseModel
 from django.db import models
 from markdownx.models import MarkdownxField
@@ -56,7 +57,7 @@ class ProgramModuleWeekLesson(BaseModel):
         ("MIDTERM_CAPSTONE", "Midterm Capstone"),
         ("FINAL_CAPSTONE", "Final Capstone"),
     )
-
+    to_be_paid = models.BooleanField(default=False)
     program_module_week = models.ForeignKey(ProgramModuleWeek, on_delete=models.CASCADE)
     name = models.CharField(max_length=300, blank=True)
     description = MarkdownxField(blank=True, null=True)
@@ -80,7 +81,26 @@ class ProgramModuleWeekLesson(BaseModel):
         return self.name
 
 
+# lesson payments
+class ProgramPayment(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    package = models.ForeignKey(Packages, on_delete=models.CASCADE)
+    program = models.ForeignKey(
+        Program, on_delete=models.CASCADE, related_name="program_payments"
+    )
+    payment = models.ForeignKey(
+        Payment, on_delete=models.CASCADE, related_name="program_payment_set"
+    )
+
+    class Meta:
+        unique_together = ("program", "payment")
+
+    def __str__(self):
+        return f"{self.program.name} - {self.payment.user.first_name}"
+
+
 class UserLearningLessonStatus(BaseModel):
+
     STATUS = (
         ("NOT_STARTED", "Not Started"),
         ("IN_PROGRESS", "In Progress"),

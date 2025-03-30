@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "authentication",
     "common",
     "AI",
+    "payments",
 ]
 API_VERSION = "v1.0"
 

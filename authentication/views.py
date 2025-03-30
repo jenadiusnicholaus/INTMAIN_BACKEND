@@ -2,16 +2,15 @@ from django.shortcuts import render
 from rest_framework import routers, serializers, viewsets
 
 from authentication.emails import EmailSender
-from authentication.serializers import GetUserSerializer, RegisterSerializer
+from authentication.serializers import (
+    GetUserSerializer,
+    RegisterSerializer,
+    CreateUserProfileSerializer,
+)
 from django.contrib.auth.models import User
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = GetUserSerializer
-
-
-from rest_framework.permissions import AllowAny
+from .utils import PermissionHandler
+from rest_framework.response import Response
+from .models import UserType, UserProfile, VerificationCode
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics, status
@@ -20,7 +19,17 @@ import random
 import string
 from datetime import timedelta
 from django.utils import timezone
-from authentication.models import VerificationCode
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = GetUserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset().get(id=request.user.id)
+        serializer = self.get_serializer(queryset)
+        return Response(serializer.data)
 
 
 class RegisterView(generics.CreateAPIView):
@@ -37,6 +46,10 @@ class RegisterView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         otp = random.randint(100000, 999999)
 
+        user_type, created = UserType.objects.get_or_create(
+            name=request.data.get("user_type")
+        )
+
         data = {
             "username": request.data.get("username"),
             "first_name": request.data.get("first_name"),
@@ -45,17 +58,43 @@ class RegisterView(generics.CreateAPIView):
             "password2": request.data.get("password2"),
             "email": request.data.get("email"),
         }
+
+        user_profile_data = {
+            "user": None,
+            "phone_number": request.data.get("phone_number"),
+            "user_type": user_type.id,
+        }
         serializer = self.get_serializer(data=data)
 
         if not serializer.is_valid():
             raise serializers.ValidationError(serializer.errors)
         user = serializer.save()
 
-        VerificationCode.objects.create(
-            user=user, code=otp, created_at=timezone.localtime(timezone.now())
-        )
+        # create profile
+        user_profile_data["user"] = user.id
+        user_profile = CreateUserProfileSerializer(data=user_profile_data)
+        if not user_profile.is_valid():
+            user.delete()
+            raise serializers.ValidationError(user_profile.errors)
+
+        user_profile.save()
 
         if user:
+            # Create verification code
+            vc = VerificationCode.objects.create(
+                user=user, code=otp, created_at=timezone.localtime(timezone.now())
+            )
+            try:
+
+                PermissionHandler.update_permissions(
+                    group_name=user_type.name,
+                    user=user,
+                    request=request,
+                    models=[UserProfile],
+                )
+            except Exception as e:
+                user.delete()
+                raise serializers.ValidationError(f"Error updating permissions {e}")
             try:
                 EmailSender.send_otp_email(user, otp)
             except Exception as e:
