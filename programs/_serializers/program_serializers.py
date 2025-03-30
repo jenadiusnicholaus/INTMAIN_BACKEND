@@ -1,7 +1,11 @@
-from authentication.serializers import GetUserSerializer
+from authentication.serializers import (
+    GetUserSerializer,
+    GetUserWithPermissionsSerializer,
+)
 from menu_manager.models import MenuMeta
 from programs._models.programs import ProgramMoreInfo, ProgramRating, ProgramStack
 from programs._models.programs_modules import UserLearningLessonStatus
+from utils.any_base_64_file_helper import Base64AnyFileField
 from ..models import (
     Program,
     UserEnrollmentProgram,
@@ -13,6 +17,7 @@ from ..models import (
 )
 from rest_framework import serializers
 from django.db import models
+from drf_extra_fields.fields import Base64FileField
 
 
 class GetMenuMetaSerializer(serializers.ModelSerializer):
@@ -22,9 +27,28 @@ class GetMenuMetaSerializer(serializers.ModelSerializer):
 
 
 class GetProgramSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source="category.name")
+    created_by = GetUserWithPermissionsSerializer(read_only=True)
+
     class Meta:
         model = Program
         depth = 1
+        fields = [
+            "id",
+            "level",
+            "name",
+            "description",
+            "category_name",
+            "image",
+            "created_by",
+        ]
+
+
+class CreateProgramSerializer(serializers.ModelSerializer):
+    image = Base64AnyFileField(required=True)
+
+    class Meta:
+        model = Program
         fields = "__all__"
 
 
@@ -74,10 +98,28 @@ class GetProgramDetailSerializer(serializers.ModelSerializer):
         return serializer.data.get("modules")
 
 
+class CreateProgramDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramMoreInfo
+        fields = "__all__"
+
+
+class UpdateProgramDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramMoreInfo
+        fields = "__all__"
+
+
 class GetProgramStackSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProgramStack
         fields = ["name", "description"]
+
+
+class CreateProgramStackSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramStack
+        fields = "__all__"
 
 
 class GetProgramMoreInfoSerializer(serializers.ModelSerializer):

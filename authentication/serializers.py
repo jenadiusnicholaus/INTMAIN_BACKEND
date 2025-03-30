@@ -8,6 +8,19 @@ from django.contrib.auth.password_validation import validate_password
 from authentication.models import UserProfile
 
 
+class GetUserWithPermissionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            "url",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+        ]
+
+
 class GetUserSerializer(serializers.HyperlinkedModelSerializer):
     phone_number = serializers.CharField(
         source="user_profile.phone_number", read_only=True

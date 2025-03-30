@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "common",
     "AI",
     "payments",
+    "tutors",
 ]
 API_VERSION = "v1.0"
 

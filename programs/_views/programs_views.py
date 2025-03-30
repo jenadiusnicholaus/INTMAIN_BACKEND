@@ -25,7 +25,11 @@ class ProgramList(generics.ListCreateAPIView):
     permission_classes = []
 
     def list(self, request):
-        queryset = self.get_queryset()
+        queryset = (
+            self.get_queryset()
+            .filter(is_active=True, publication_status="published")
+            .order_by("-created_at")
+        )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 

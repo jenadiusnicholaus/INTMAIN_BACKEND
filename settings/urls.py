@@ -33,8 +33,9 @@ urlpatterns = [
     path("markdownx/", include(markdownx)),
     path("mdeditor/", include("mdeditor.urls")),
     path(f"{SUFFIX}/menu_manager/", include("menu_manager.urls")),
-    path("{SUFFIX}/common/", include("common.urls")),
+    path(f"{SUFFIX}/common/", include("common.urls")),
     path(f"{SUFFIX}/payments/", include("payments.urls")),
+    path(f"{SUFFIX}/tutors/", include("tutors.urls")),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

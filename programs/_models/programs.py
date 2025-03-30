@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+from common.models import Stack
 from utils.bases_models import BaseModel
 from markdownx.models import MarkdownxField
 
@@ -20,12 +21,20 @@ class Program(BaseModel):
         ("intermediate", "Intermediate"),
         ("expert", "Expert"),
     )
+    PUB_STATUS = (
+        ("draft", "Draft"),
+        ("published", "Published"),
+    )
+    publication_status = models.CharField(
+        max_length=10, default="draft", choices=PUB_STATUS
+    )
     category = models.ForeignKey(ProgramCategory, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     description = models.TextField()
     level = models.CharField(max_length=200, choices=LEVEL, default="beginner")
     start_date = models.DateField()
     end_date = models.DateField()
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     image = models.ImageField(upload_to="programs/images/", blank=True, null=True)
 
@@ -65,8 +74,15 @@ class ProgramStack(BaseModel):
         blank=True,
         related_name="program_stacks",
     )
-    name = models.CharField(max_length=200)
-    description = models.TextField()
+    name = models.CharField(max_length=200, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    stack = models.ForeignKey(
+        Stack,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="program_stacks",
+    )
 
     def __str__(self):
         return self.name
