@@ -19,7 +19,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets
 
 
-class ProgramList(generics.ListCreateAPIView):
+class ProgramList(generics.ListAPIView):
     queryset = Program.objects.all()
     serializer_class = GetProgramSerializer
     permission_classes = []

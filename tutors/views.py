@@ -2,14 +2,28 @@ from rest_framework import viewsets
 
 from authentication.utils import PermissionHandler
 from programs._models.programs import Program
+from programs._models.programs_modules import (
+    ProgramModule,
+    ProgramModuleWeek,
+    ProgramModuleWeekLesson,
+)
 from programs._serializers.program_serializers import (
     CreateProgramDetailSerializer,
+    CreateProgramModuleSerializer,
+    CreateProgramModuleWeekLessonSerializer,
+    CreateProgramModuleWeekSerializer,
     CreateProgramSerializer,
     CreateProgramStackSerializer,
+    GetProgramModuleSerializer,
+    GetProgramModuleWeekLessonSerializer,
+    GetProgramModuleWeekSerializer,
+    GetProgramModuleWithOutSubModulesSerializer,
     GetProgramSerializer,
+    UpdateProgramModuleSerializer,
+    UpdateProgramModuleWeekLessonSerializer,
 )
-from rest_framework.permissions import IsAuthenticated
-from authentication.permissions import IsTutor
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from authentication.permissions import IsTutor, IsTutorOrIsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
@@ -20,7 +34,7 @@ from rest_framework import serializers
 class TutorProgramModelViewSet(viewsets.ModelViewSet):
     queryset = Program.objects.all()
     serializer_class = GetProgramSerializer
-    permission_classes = [IsAuthenticated, IsTutor]
+    permission_classes = [IsAuthenticated, IsTutorOrIsAdminUser]
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset().filter(created_by=request.user)
@@ -97,6 +111,333 @@ class TutorProgramModelViewSet(viewsets.ModelViewSet):
                 raise serializers.ValidationError(f"Error updating permissions {e}")
 
         return Response(
-            {"message": "Program created successfully", "program_id": program.id},
+            {
+                "message": "Program created successfully",
+                "data": program_serializer.data,
+            },
             status=status.HTTP_201_CREATED,
         )
+
+    def delete(self, request, *args, **kwargs):
+        program_id = self.request.query_params.get("program_id")
+        try:
+            program = Program.objects.get(id=program_id)
+            program.delete()
+            return Response(
+                {
+                    "message": "Program deleted successfully",
+                },
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except Program.DoesNotExist:
+            raise serializers.ValidationError("Program does not exist")
+
+
+class TutorProgramModuleViewSet(viewsets.ModelViewSet):
+    queryset = ProgramModule.objects.all()
+    serializer_class = GetProgramModuleWithOutSubModulesSerializer
+    permission_classes = [IsAuthenticated, IsTutorOrIsAdminUser]
+
+    def list(self, request, *args, **kwargs):
+        program_id = self.request.query_params.get("program_id")
+        queryset = self.get_queryset().filter(program__created_by=request.user)
+
+        if program_id is not None:
+            queryset = queryset.filter(program_id=program_id)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        # CreateProgramModuleSerializer
+        module_data = {
+            "program": request.data.get("program_id"),
+            "display_name": request.data.get("module_name"),
+            "meta": request.data.get("meta_id"),
+            "created_by": request.user.id,
+            "publication_status": request.data.get("publication_status"),
+            "description": request.data.get("md_description"),
+            "order": request.data.get("order"),
+        }
+
+        with transaction.atomic():
+            module_serializer = CreateProgramModuleSerializer(data=module_data)
+            if not module_serializer.is_valid():
+                raise serializers.ValidationError(module_serializer.errors)
+            module = module_serializer.save()
+
+            # update permissions
+            try:
+                PermissionHandler.update_permissions(
+                    group_name="TEACHER",
+                    user=request.user,
+                    request=request,
+                    models=[ProgramModule],
+                )
+            except Exception as e:
+                # delete parent
+                module.delete()
+                raise serializers.ValidationError(f"Error updating permissions {e}")
+
+        return Response(
+            {
+                "message": "Module created successfully",
+                "data": module_serializer.data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    def put(self, request, *args, **kwargs):
+        module_id = self.request.query_params.get("module_id")
+        module = ProgramModule.objects.get(id=module_id)
+        module_data = {
+            "display_name": request.data.get("module_name"),
+            "meta": request.data.get("meta_id"),
+            "publication_status": request.data.get("publication_status"),
+            "description": request.data.get("md_description"),
+            "order": request.data.get("order"),
+            "updated_by": request.user.id,
+        }
+
+        with transaction.atomic():
+            module_serializer = UpdateProgramModuleSerializer(
+                instance=module, data=module_data, partial=True
+            )
+            if not module_serializer.is_valid():
+                raise serializers.ValidationError(module_serializer.errors)
+            module = module_serializer.save()
+
+        return Response(
+            {
+                "message": "Module updated successfully",
+                "data": module_serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request, *args, **kwargs):
+        module_id = self.request.query_params.get("module_id")
+        try:
+            module = ProgramModule.objects.get(id=module_id)
+            module.delete()
+            return Response(
+                {
+                    "message": "Module deleted successfully",
+                },
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except ProgramModule.DoesNotExist:
+            raise serializers.ValidationError("Module does not exist")
+
+
+class ModuleWeekViewSet(viewsets.ModelViewSet):
+    queryset = ProgramModuleWeek.objects.all()
+    serializer_class = GetProgramModuleWeekSerializer
+
+    def list(self, request, *args, **kwargs):
+        module_id = self.request.query_params.get("module_id")
+        queryset = self.get_queryset().filter(
+            program_module__id=module_id,
+            program_module__program__created_by=request.user,
+        )
+
+        if module_id is not None:
+            queryset = queryset.filter(program_module_id=module_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        # CreateProgramModuleSerializer
+        sub_module_data = {
+            "program_module": request.data.get("module_id"),
+            "week": request.data.get("week"),
+            "display_name": request.data.get("sub_module_name"),
+            "meta": request.data.get("meta_id"),
+            "created_by": request.user.id,
+            "description": request.data.get("md_description"),
+            "order": request.data.get("order"),
+            "publication_status": request.data.get("publication_status"),
+        }
+        with transaction.atomic():
+            sub_module_serializer = CreateProgramModuleWeekSerializer(
+                data=sub_module_data
+            )
+            if not sub_module_serializer.is_valid():
+                raise serializers.ValidationError(sub_module_serializer.errors)
+            sub_module = sub_module_serializer.save()
+
+            # update permissions
+            try:
+                PermissionHandler.update_permissions(
+                    group_name="TEACHER",
+                    user=request.user,
+                    request=request,
+                    models=[ProgramModuleWeek],
+                )
+            except Exception as e:
+                # delete parent
+                sub_module.delete()
+                raise serializers.ValidationError(f"Error updating permissions {e}")
+
+        return Response(
+            {
+                "message": "Sub-module created successfully",
+                "data": sub_module_serializer.data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    def put(self, request, *args, **kwargs):
+        sub_module_id = self.request.query_params.get("sub_module_id")
+        sub_module = ProgramModuleWeek.objects.get(id=sub_module_id)
+        sub_module_data = {
+            "week": request.data.get("week"),
+            "display_name": request.data.get("sub_module_name"),
+            "meta": request.data.get("meta_id"),
+            "description": request.data.get("md_description"),
+            "order": request.data.get("order"),
+            "updated_by": request.user.id,
+            "publication_status": request.data.get("publication_status"),
+        }
+
+        with transaction.atomic():
+            sub_module_serializer = CreateProgramModuleWeekSerializer(
+                instance=sub_module, data=sub_module_data, partial=True
+            )
+            if not sub_module_serializer.is_valid():
+                raise serializers.ValidationError(sub_module_serializer.errors)
+            sub_module = sub_module_serializer.save()
+
+        return Response(
+            {
+                "message": "Sub-module updated successfully",
+                "data": sub_module_serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request, *args, **kwargs):
+        sub_module_id = self.request.query_params.get("sub_module_id")
+        try:
+            sub_module = ProgramModuleWeek.objects.get(id=sub_module_id)
+            sub_module.delete()
+            return Response(
+                {
+                    "message": "Sub-module deleted successfully",
+                },
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except ProgramModuleWeek.DoesNotExist:
+            raise serializers.ValidationError("Sub-module does not exist")
+
+
+class TutorProgramSubModeleLessonViewSet(viewsets.ModelViewSet):
+    queryset = ProgramModuleWeekLesson.objects.all()
+    serializer_class = GetProgramModuleWeekLessonSerializer
+    permission_classes = [IsAuthenticated, IsTutorOrIsAdminUser]
+
+    def list(self, request, *args, **kwargs):
+        sub_module_id = self.request.query_params.get("sub_module_id")
+        queryset = self.get_queryset().filter(
+            program_module_week__id=sub_module_id,
+            program_module_week__program_module__program__created_by=request.user,
+        )
+
+        if sub_module_id is not None:
+            queryset = queryset.filter(program_module_week_id=sub_module_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        # CreateProgramModuleSerializer
+        lesson_data = {
+            "program_module_week": request.data.get("sub_module_id"),
+            "name": request.data.get("lesson_name"),
+            "description": request.data.get("md_description"),
+            "short_description": request.data.get("short_description"),
+            "order": request.data.get("order"),
+            "learning_model": request.data.get("learning_model"),
+            "lesson_type": request.data.get("lesson_type"),
+            "duration": request.data.get("duration"),
+            "is_active": request.data.get("is_active"),
+            "to_be_paid": request.data.get("to_be_paid"),
+            "is_optional": request.data.get("is_optional"),
+            "created_by": request.user.id,
+            "publication_status": request.data.get("publication_status"),
+        }
+        with transaction.atomic():
+            lesson_serializer = CreateProgramModuleWeekLessonSerializer(
+                data=lesson_data
+            )
+            if not lesson_serializer.is_valid():
+                raise serializers.ValidationError(lesson_serializer.errors)
+            lesson = lesson_serializer.save()
+
+            # update permissions
+            try:
+                PermissionHandler.update_permissions(
+                    group_name="TEACHER",
+                    user=request.user,
+                    request=request,
+                    models=[ProgramModuleWeekLesson],
+                )
+            except Exception as e:
+                # delete parent
+                lesson.delete()
+                raise serializers.ValidationError(f"Error updating permissions {e}")
+
+        return Response(
+            {
+                "message": "Lesson created successfully",
+                "data": lesson_serializer.data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    def put(self, request, *args, **kwargs):
+        lesson_id = self.request.query_params.get("lesson_id")
+        lesson = ProgramModuleWeekLesson.objects.get(id=lesson_id)
+        lesson_data = {
+            "name": request.data.get("lesson_name"),
+            "description": request.data.get("md_description"),
+            "short_description": request.data.get("short_description"),
+            "order": request.data.get("order"),
+            "learning_model": request.data.get("learning_model"),
+            "lesson_type": request.data.get("lesson_type"),
+            "duration": request.data.get("duration"),
+            "to_be_paid": request.data.get("to_be_paid"),
+            "is_active": request.data.get("is_active"),
+            "is_optional": request.data.get("is_optional"),
+            "updated_by": request.user.id,
+            "publication_status": request.data.get("publication_status"),
+        }
+
+        with transaction.atomic():
+            lesson_serializer = UpdateProgramModuleWeekLessonSerializer(
+                instance=lesson, data=lesson_data, partial=True
+            )
+            if not lesson_serializer.is_valid():
+                raise serializers.ValidationError(lesson_serializer.errors)
+            lesson = lesson_serializer.save()
+
+        return Response(
+            {
+                "message": "Lesson updated successfully",
+                "data": lesson_serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request, *args, **kwargs):
+        lesson_id = self.request.query_params.get("lesson_id")
+        try:
+            lesson = ProgramModuleWeekLesson.objects.get(id=lesson_id)
+            lesson.delete()
+            return Response(
+                {
+                    "message": "Lesson deleted successfully",
+                },
+                status=status.HTTP_204_NO_CONTENT,
+            )
+        except ProgramModuleWeekLesson.DoesNotExist:
+            raise serializers.ValidationError("Lesson does not exist")

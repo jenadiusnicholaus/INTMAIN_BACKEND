@@ -23,7 +23,7 @@ from drf_extra_fields.fields import Base64FileField
 class GetMenuMetaSerializer(serializers.ModelSerializer):
     class Meta:
         model = MenuMeta
-        fields = ["icon"]
+        fields = ["id", "icon"]
 
 
 class GetProgramSerializer(serializers.ModelSerializer):
@@ -176,6 +176,12 @@ class GetProgramRatingSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class GetProgramModuleWithOutSubModulesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramModule
+        fields = ["id", "name", "display_name", "order", "description"]
+
+
 class GetProgramModuleSerializer(serializers.ModelSerializer):
 
     # children are module weeks
@@ -206,7 +212,9 @@ class GetProgramModuleSerializer(serializers.ModelSerializer):
 # redant Serializer for ProgramModuleWeekLesson
 class GetDProgramModuleSerializer(serializers.ModelSerializer):
     """
-    Serializer for ProgramModule with children as ProgramModuleWeek"""
+    Serializer for ProgramModule with children as ProgramModuleWeek
+    D is program Details
+    """
 
     # children are module weeks
 
@@ -233,6 +241,18 @@ class GetDProgramModuleSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
+class CreateProgramModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramModule
+        fields = "__all__"
+
+
+class UpdateProgramModuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramModule
+        fields = "__all__"
+
+
 class GetDProgramModuleWeekSerializer(serializers.ModelSerializer):
     """
     Serializer for ProgramModuleWeek with children as ProgramModuleWeekLesson"""
@@ -256,6 +276,12 @@ class GetProgramModuleWeekSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProgramModuleWeek
         fields = ["id", "name", "display_name", "order", "meta", "description"]
+
+
+class CreateProgramModuleWeekSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramModuleWeek
+        fields = "__all__"
 
 
 class GetProgramFeedbackSerializer(serializers.ModelSerializer):
@@ -323,6 +349,18 @@ class GetProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
                 "/media/", f"{base_url}media/"
             )
         return data
+
+
+class CreateProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramModuleWeekLesson
+        fields = "__all__"
+
+
+class UpdateProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProgramModuleWeekLesson
+        fields = "__all__"
 
 
 class GetUserLearningLessonStatusSerializer(serializers.ModelSerializer):

@@ -1,5 +1,6 @@
 from menu_manager.models import MenuMeta
 from payments.models import Packages, Payment
+from programs._models.programs import BaseProgramPublication
 from utils.bases_models import BaseModel
 from django.db import models
 from markdownx.models import MarkdownxField
@@ -9,26 +10,30 @@ from django.contrib.auth.models import User
 from markdownx.utils import markdownify
 
 
-class ProgramModule(BaseModel):
+class ProgramModule(BaseProgramPublication):
     program = models.ForeignKey(Program, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255, null=True, blank=True)
+    name = models.CharField(
+        max_length=255, null=True, blank=True, default="program-module"
+    )
     display_name = models.CharField(max_length=255, blank=True, null=True)
     meta = models.ForeignKey(MenuMeta, on_delete=models.CASCADE, blank=True, null=True)
     description = MarkdownxField(blank=True, null=True)
     order = models.IntegerField(default=0)
 
     class Meta:
-        unique_together = ("program", "name")
+        # unique_together = ("program", "name")
         ordering = ["order"]
 
     def __str__(self):
         return self.display_name or self.name
 
 
-class ProgramModuleWeek(BaseModel):
+class ProgramModuleWeek(BaseProgramPublication):
     program_module = models.ForeignKey(ProgramModule, on_delete=models.CASCADE)
     week = models.IntegerField(default=0)
-    name = models.CharField(max_length=255, null=True, blank=True)
+    name = models.CharField(
+        max_length=255, null=True, blank=True, default="weekly-lessons"
+    )
     display_name = models.CharField(max_length=255, blank=True, null=True)
     description = MarkdownxField(blank=True, null=True)
     meta = models.ForeignKey(MenuMeta, on_delete=models.CASCADE, blank=True, null=True)
@@ -43,7 +48,7 @@ class ProgramModuleWeek(BaseModel):
         return self.display_name or self.name
 
 
-class ProgramModuleWeekLesson(BaseModel):
+class ProgramModuleWeekLesson(BaseProgramPublication):
     LEARNING_MODEL = (
         ("SOLO", "Solo"),
         ("GROUP", "Group"),
@@ -61,6 +66,7 @@ class ProgramModuleWeekLesson(BaseModel):
     program_module_week = models.ForeignKey(ProgramModuleWeek, on_delete=models.CASCADE)
     name = models.CharField(max_length=300, blank=True)
     description = MarkdownxField(blank=True, null=True)
+    short_description = models.TextField(blank=True, null=True)
     order = models.IntegerField(default=0)
     learning_model = models.CharField(
         max_length=40, choices=LEARNING_MODEL, default="SOLO"
@@ -82,7 +88,7 @@ class ProgramModuleWeekLesson(BaseModel):
 
 
 # lesson payments
-class ProgramPayment(BaseModel):
+class ProgramPayment(BaseProgramPublication):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     package = models.ForeignKey(Packages, on_delete=models.CASCADE)
     program = models.ForeignKey(
@@ -99,7 +105,7 @@ class ProgramPayment(BaseModel):
         return f"{self.program.name} - {self.payment.user.first_name}"
 
 
-class UserLearningLessonStatus(BaseModel):
+class UserLearningLessonStatus(BaseProgramPublication):
 
     STATUS = (
         ("NOT_STARTED", "Not Started"),

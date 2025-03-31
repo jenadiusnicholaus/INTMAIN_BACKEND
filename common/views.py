@@ -9,6 +9,20 @@ from common.serializers import GetStackSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import serializers
+from rest_framework import generics
+
+from menu_manager.models import MenuMeta
+from programs._serializers.program_serializers import GetMenuMetaSerializer
+
+
+class MenuMetaList(generics.ListAPIView):
+    serializer_class = GetMenuMetaSerializer
+    queryset = MenuMeta.objects.all()
+    permission_classes = []
+
+    def list(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_queryset().filter(), many=True)
+        return Response(serializer.data)
 
 
 class StacksViewset(viewsets.ModelViewSet):

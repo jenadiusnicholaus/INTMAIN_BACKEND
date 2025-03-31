@@ -15,12 +15,7 @@ class ProgramCategory(BaseModel):
         return self.name
 
 
-class Program(BaseModel):
-    LEVEL = (
-        ("beginner", "Beginner"),
-        ("intermediate", "Intermediate"),
-        ("expert", "Expert"),
-    )
+class BaseProgramPublication(BaseModel):
     PUB_STATUS = (
         ("draft", "Draft"),
         ("published", "Published"),
@@ -28,6 +23,24 @@ class Program(BaseModel):
     publication_status = models.CharField(
         max_length=10, default="draft", choices=PUB_STATUS
     )
+
+    class Meta:
+        abstract = True
+
+
+class Program(BaseProgramPublication):
+    LEVEL = (
+        ("beginner", "Beginner"),
+        ("intermediate", "Intermediate"),
+        ("expert", "Expert"),
+    )
+    # PUB_STATUS = (
+    #     ("draft", "Draft"),
+    #     ("published", "Published"),
+    # )
+    # publication_status = models.CharField(
+    #     max_length=10, default="draft", choices=PUB_STATUS
+    # )
     category = models.ForeignKey(ProgramCategory, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     description = models.TextField()
