@@ -28,11 +28,11 @@ class GetUserSerializer(serializers.HyperlinkedModelSerializer):
     user_type = serializers.CharField(
         source="user_profile.user_type.name", read_only=True
     )
-    permissions = serializers.SerializerMethodField()
+    # permissions = serializers.SerializerMethodField()
 
     user_groups = serializers.SerializerMethodField()
 
-    group_permissions = serializers.SerializerMethodField()
+    # group_permissions = serializers.SerializerMethodField()
 
     def get_user_groups(self, obj):
         """Get all groups of user"""
@@ -69,8 +69,8 @@ class GetUserSerializer(serializers.HyperlinkedModelSerializer):
             "phone_number",
             "user_type",
             "user_groups",
-            "group_permissions",
-            "permissions",
+            # "group_permissions",
+            # "permissions",
         ]
 
 
