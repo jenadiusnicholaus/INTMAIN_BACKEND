@@ -20,8 +20,8 @@ pillow==11.1.0
 PyJWT==2.9.0
 PyMySQL==1.1.1
 python-decouple==3.8
-python-magic==0.4.27
-python-magic-bin==0.4.14
+python-magic
+python-magic-bin
 requests==2.32.3
 six==1.17.0
 soupsieve==2.6
