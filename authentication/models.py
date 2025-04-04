@@ -24,6 +24,9 @@ class UserProfile(BaseModel):
     user_type = models.ForeignKey(
         UserType, on_delete=models.CASCADE, null=True, blank=True
     )
+    profile_picture = models.ImageField(
+        upload_to="profile/images/", null=True, blank=True
+    )
 
     def __str__(self):
         return self.user.email

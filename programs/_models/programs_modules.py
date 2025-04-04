@@ -30,7 +30,7 @@ class ProgramModule(BaseProgramPublication):
 
 class ProgramModuleWeek(BaseProgramPublication):
     program_module = models.ForeignKey(ProgramModule, on_delete=models.CASCADE)
-    week = models.IntegerField(default=0)
+    week = models.IntegerField(default=0, blank=True, null=True)
     name = models.CharField(
         max_length=255, null=True, blank=True, default="weekly-lessons"
     )
@@ -72,7 +72,7 @@ class ProgramModuleWeekLesson(BaseProgramPublication):
         max_length=40, choices=LEARNING_MODEL, default="SOLO"
     )
     lesson_type = models.CharField(max_length=40, choices=LESSON_TYPE, default="NORMAL")
-    duration = models.IntegerField(default=0)
+    duration = models.IntegerField(default=0, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_optional = models.BooleanField(default=False)
 

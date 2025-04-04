@@ -52,7 +52,15 @@ class UserEnrolledProgramList(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         user = self.request.user
-        queryset = self.get_queryset().filter(user=user).latest("created_at")
+        try:
+            queryset = self.get_queryset().filter(user=user).latest("created_at")
+        except UserEnrollmentProgram.DoesNotExist:
+            data = ({"message": "User not enrolled in any program yet", "modules": []},)
+            return Response(
+                data,
+                status=status.HTTP_200_OK,
+            )
+
         serializer = self.get_serializer(queryset)
         return Response(serializer.data)
 

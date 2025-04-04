@@ -2,6 +2,7 @@ from authentication.serializers import (
     GetUserSerializer,
     GetUserWithPermissionsSerializer,
 )
+from common.serializers import GetStackSerializer
 from menu_manager.models import MenuMeta
 from programs._models.programs import ProgramMoreInfo, ProgramRating, ProgramStack
 from programs._models.programs_modules import UserLearningLessonStatus
@@ -27,8 +28,18 @@ class GetMenuMetaSerializer(serializers.ModelSerializer):
 
 
 class GetProgramSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source="category.name")
+    category = serializers.SerializerMethodField()
     created_by = GetUserWithPermissionsSerializer(read_only=True)
+    stacks = serializers.SerializerMethodField()
+
+    def get_category(self, obj):
+        serializer = GetProgramCategorySerializer(obj.category)
+        return serializer.data
+
+    def get_stacks(self, obj):
+        stacks = obj.program_stacks.all()
+        serializer = GetProgramStackSerializer(stacks, many=True)
+        return serializer.data
 
     class Meta:
         model = Program
@@ -38,14 +49,28 @@ class GetProgramSerializer(serializers.ModelSerializer):
             "level",
             "name",
             "description",
-            "category_name",
+            "category",
             "image",
+            "stacks",
             "created_by",
+            "start_date",
+            "end_date",
+            "is_active",
+            "created_at",
+            "updated_at",
         ]
 
 
 class CreateProgramSerializer(serializers.ModelSerializer):
     image = Base64AnyFileField(required=True)
+
+    class Meta:
+        model = Program
+        fields = "__all__"
+
+
+class UpdateProgramSerializer(serializers.ModelSerializer):
+    image = Base64AnyFileField(required=False)
 
     class Meta:
         model = Program
@@ -111,9 +136,15 @@ class UpdateProgramDetailSerializer(serializers.ModelSerializer):
 
 
 class GetProgramStackSerializer(serializers.ModelSerializer):
+    stacks = serializers.SerializerMethodField()
+
+    def get_stacks(self, obj):
+        serializer = GetStackSerializer(obj.stack)
+        return serializer.data
+
     class Meta:
         model = ProgramStack
-        fields = ["name", "description"]
+        fields = ["id", "stacks"]
 
 
 class CreateProgramStackSerializer(serializers.ModelSerializer):
@@ -167,7 +198,21 @@ class CreateUserEnrollmentProgramSerializer(serializers.ModelSerializer):
 class GetProgramCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProgramCategory
-        fields = "__all__"
+        # fields = "__all__"
+
+        # "created_by": null,
+        # "updated_by": null,
+        # "deleted_by": null
+
+        exclude = (
+            "description",
+            "created_at",
+            "updated_at",
+            "deleted_at",
+            "created_by",
+            "updated_by",
+            "deleted_by",
+        )
 
 
 class GetProgramRatingSerializer(serializers.ModelSerializer):

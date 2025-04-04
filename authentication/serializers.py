@@ -25,6 +25,9 @@ class GetUserSerializer(serializers.HyperlinkedModelSerializer):
     phone_number = serializers.CharField(
         source="user_profile.phone_number", read_only=True
     )
+    profile_picture = serializers.ImageField(
+        source="user_profile.profile_picture", read_only=True
+    )
     user_type = serializers.CharField(
         source="user_profile.user_type.name", read_only=True
     )
@@ -64,11 +67,15 @@ class GetUserSerializer(serializers.HyperlinkedModelSerializer):
         fields = [
             "url",
             "username",
+            "first_name",
+            "last_name",
             "email",
             "is_staff",
             "phone_number",
             "user_type",
             "user_groups",
+            "date_joined",
+            "profile_picture",
             # "group_permissions",
             # "permissions",
         ]

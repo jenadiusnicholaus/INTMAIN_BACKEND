@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 
 from authentication.utils import PermissionHandler
-from programs._models.programs import Program
+from programs._models.programs import Program, ProgramMoreInfo, ProgramStack
 from programs._models.programs_modules import (
     ProgramModule,
     ProgramModuleWeek,
@@ -14,13 +14,14 @@ from programs._serializers.program_serializers import (
     CreateProgramModuleWeekSerializer,
     CreateProgramSerializer,
     CreateProgramStackSerializer,
-    GetProgramModuleSerializer,
     GetProgramModuleWeekLessonSerializer,
     GetProgramModuleWeekSerializer,
     GetProgramModuleWithOutSubModulesSerializer,
     GetProgramSerializer,
+    UpdateProgramDetailSerializer,
     UpdateProgramModuleSerializer,
     UpdateProgramModuleWeekLessonSerializer,
+    UpdateProgramSerializer,
 )
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from authentication.permissions import IsTutor, IsTutorOrIsAdminUser
@@ -37,7 +38,9 @@ class TutorProgramModelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsTutorOrIsAdminUser]
 
     def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset().filter(created_by=request.user)
+        queryset = (
+            self.get_queryset().filter(created_by=request.user).order_by("-created_at")
+        )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -58,11 +61,13 @@ class TutorProgramModelViewSet(viewsets.ModelViewSet):
             "image": request.data.get("image"),
             "publication_status": request.data.get("publication_status"),
             "is_active": request.data.get("is_active"),
+            "created_by": request.user.id,
         }
 
         program_detail_data = {
             "program": None,
             "more_info": request.data.get("md_description"),
+            "created_by": request.user.id,
         }
 
         program_stacks = request.data.get("program_stacks")
@@ -118,6 +123,50 @@ class TutorProgramModelViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
+    def patch(self, request, *args, **kwargs):
+        program_id = self.request.query_params.get("program_id")
+        program = Program.objects.get(id=program_id)
+
+        # Use the original values if not provided in the request
+        program_data = {
+            "name": request.data.get("name", program.name),
+            "category": request.data.get("category_id", program.category.id),
+            "updated_by": request.user.id,
+            "description": request.data.get("short_description", program.description),
+            "level": request.data.get("level", program.level),
+            "start_date": request.data.get("start_date", program.start_date),
+            "end_date": request.data.get("end_date", program.end_date),
+            "publication_status": request.data.get(
+                "publication_status", program.publication_status
+            ),
+            "is_active": request.data.get("is_active", program.is_active),
+        }
+
+        image = request.data.get("image")
+        if image and image.strip():
+            program_data["image"] = image
+
+        with transaction.atomic():
+            program_serializer = UpdateProgramSerializer(
+                instance=program, data=program_data, partial=True
+            )
+            if not program_serializer.is_valid():
+                raise serializers.ValidationError(program_serializer.errors)
+            updated_program = program_serializer.save()
+
+            program_detail = ProgramMoreInfo.objects.filter(program=program).update(
+                more_info=request.data.get("md_description"),
+                updated_by=request.user.id,
+            )
+
+        return Response(
+            {
+                "message": "Program updated successfully",
+                "data": program_serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
     def delete(self, request, *args, **kwargs):
         program_id = self.request.query_params.get("program_id")
         try:
@@ -140,7 +189,7 @@ class TutorProgramModuleViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         program_id = self.request.query_params.get("program_id")
-        queryset = self.get_queryset().filter(program__created_by=request.user)
+        queryset = self.get_queryset().filter(created_by=request.user)
 
         if program_id is not None:
             queryset = queryset.filter(program_id=program_id)
@@ -158,6 +207,7 @@ class TutorProgramModuleViewSet(viewsets.ModelViewSet):
             "publication_status": request.data.get("publication_status"),
             "description": request.data.get("md_description"),
             "order": request.data.get("order"),
+            "created_by": request.user.id,
         }
 
         with transaction.atomic():
@@ -187,15 +237,17 @@ class TutorProgramModuleViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    def put(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         module_id = self.request.query_params.get("module_id")
         module = ProgramModule.objects.get(id=module_id)
         module_data = {
-            "display_name": request.data.get("module_name"),
-            "meta": request.data.get("meta_id"),
-            "publication_status": request.data.get("publication_status"),
-            "description": request.data.get("md_description"),
-            "order": request.data.get("order"),
+            "display_name": request.data.get("module_name", module.display_name),
+            "meta": request.data.get("meta_id", module.meta.id),
+            "publication_status": request.data.get(
+                "publication_status", module.publication_status
+            ),
+            "description": request.data.get("md_description", module.description),
+            "order": request.data.get("order", module.order),
             "updated_by": request.user.id,
         }
 
@@ -237,8 +289,7 @@ class ModuleWeekViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         module_id = self.request.query_params.get("module_id")
         queryset = self.get_queryset().filter(
-            program_module__id=module_id,
-            program_module__program__created_by=request.user,
+            created_by=request.user,
         )
 
         if module_id is not None:
@@ -257,6 +308,7 @@ class ModuleWeekViewSet(viewsets.ModelViewSet):
             "description": request.data.get("md_description"),
             "order": request.data.get("order"),
             "publication_status": request.data.get("publication_status"),
+            "created_by": request.user.id,
         }
         with transaction.atomic():
             sub_module_serializer = CreateProgramModuleWeekSerializer(
@@ -287,17 +339,21 @@ class ModuleWeekViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    def put(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         sub_module_id = self.request.query_params.get("sub_module_id")
         sub_module = ProgramModuleWeek.objects.get(id=sub_module_id)
         sub_module_data = {
-            "week": request.data.get("week"),
-            "display_name": request.data.get("sub_module_name"),
-            "meta": request.data.get("meta_id"),
-            "description": request.data.get("md_description"),
-            "order": request.data.get("order"),
+            "week": request.data.get("week", sub_module.week),
+            "display_name": request.data.get(
+                "sub_module_name", sub_module.display_name
+            ),
+            "meta": request.data.get("meta_id", sub_module.meta.id),
+            "description": request.data.get("md_description", sub_module.description),
+            "order": request.data.get("order", sub_module.order),
             "updated_by": request.user.id,
-            "publication_status": request.data.get("publication_status"),
+            "publication_status": request.data.get(
+                "publication_status", sub_module.publication_status
+            ),
         }
 
         with transaction.atomic():
@@ -338,13 +394,18 @@ class TutorProgramSubModeleLessonViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         sub_module_id = self.request.query_params.get("sub_module_id")
-        queryset = self.get_queryset().filter(
-            program_module_week__id=sub_module_id,
-            program_module_week__program_module__program__created_by=request.user,
+        queryset = (
+            self.get_queryset()
+            .filter(
+                created_by=request.user,
+            )
+            .order_by("-created_at")
         )
 
         if sub_module_id is not None:
-            queryset = queryset.filter(program_module_week_id=sub_module_id)
+            queryset = queryset.filter(program_module_week_id=sub_module_id).order_by(
+                -"created_at"
+            )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -394,22 +455,26 @@ class TutorProgramSubModeleLessonViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
-    def put(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         lesson_id = self.request.query_params.get("lesson_id")
         lesson = ProgramModuleWeekLesson.objects.get(id=lesson_id)
         lesson_data = {
-            "name": request.data.get("lesson_name"),
-            "description": request.data.get("md_description"),
-            "short_description": request.data.get("short_description"),
-            "order": request.data.get("order"),
-            "learning_model": request.data.get("learning_model"),
-            "lesson_type": request.data.get("lesson_type"),
-            "duration": request.data.get("duration"),
-            "to_be_paid": request.data.get("to_be_paid"),
-            "is_active": request.data.get("is_active"),
-            "is_optional": request.data.get("is_optional"),
+            "name": request.data.get("lesson_name", lesson.name),
+            "description": request.data.get("md_description", lesson.description),
+            "short_description": request.data.get(
+                "short_description", lesson.short_description
+            ),
+            "order": request.data.get("order", lesson.order),
+            "learning_model": request.data.get("learning_model", lesson.learning_model),
+            "lesson_type": request.data.get("lesson_type", lesson.lesson_type),
+            "duration": request.data.get("duration", lesson.duration),
+            "to_be_paid": request.data.get("to_be_paid", lesson.to_be_paid),
+            "is_active": request.data.get("is_active", lesson.is_active),
+            "is_optional": request.data.get("is_optional", lesson.is_optional),
             "updated_by": request.user.id,
-            "publication_status": request.data.get("publication_status"),
+            "publication_status": request.data.get(
+                "publication_status", lesson.publication_status
+            ),
         }
 
         with transaction.atomic():

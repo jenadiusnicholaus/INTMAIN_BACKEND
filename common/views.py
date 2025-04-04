@@ -12,7 +12,11 @@ from rest_framework import serializers
 from rest_framework import generics
 
 from menu_manager.models import MenuMeta
-from programs._serializers.program_serializers import GetMenuMetaSerializer
+from programs._models.programs import ProgramCategory
+from programs._serializers.program_serializers import (
+    GetMenuMetaSerializer,
+    GetProgramCategorySerializer,
+)
 
 
 class MenuMetaList(generics.ListAPIView):
@@ -47,5 +51,15 @@ class StacksViewset(viewsets.ModelViewSet):
                 name=runtime["language"], version=runtime["version"]
             )
 
+        serializer = self.get_serializer(self.queryset, many=True)
+        return Response(serializer.data)
+
+
+class CategoriesViewset(viewsets.ModelViewSet):
+    queryset = ProgramCategory.objects.all()
+    permission_classes = []
+    serializer_class = GetProgramCategorySerializer
+
+    def list(self, request, *args, **kwargs):
         serializer = self.get_serializer(self.queryset, many=True)
         return Response(serializer.data)

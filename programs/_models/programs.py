@@ -87,8 +87,8 @@ class ProgramStack(BaseModel):
         blank=True,
         related_name="program_stacks",
     )
-    name = models.CharField(max_length=200, null=True, blank=True)
-    description = models.TextField(null=True, blank=True)
+    # name = models.CharField(max_length=200, null=True, blank=True)
+    # description = models.TextField(null=True, blank=True)
     stack = models.ForeignKey(
         Stack,
         on_delete=models.CASCADE,
@@ -98,7 +98,7 @@ class ProgramStack(BaseModel):
     )
 
     def __str__(self):
-        return self.name
+        return f"{self.program.name} - {self.name}"
 
 
 class UserEnrollmentProgram(BaseModel):
