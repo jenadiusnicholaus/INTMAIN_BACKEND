@@ -20,6 +20,9 @@ from rest_framework import serializers
 from django.db import models
 from drf_extra_fields.fields import Base64FileField
 
+# user
+from django.contrib.auth.models import User
+
 
 class GetMenuMetaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -170,6 +173,123 @@ class GetUserEnrollmentProgramSerializer(serializers.ModelSerializer):
         module = ProgramModule.objects.filter(program=obj.program)
         serializer = GetProgramModuleSerializer(module, many=True)
         return serializer.data
+
+
+class StatsSerializer(serializers.ModelSerializer):
+    # Enrolled Programs
+    enrolled_programs = serializers.SerializerMethodField()
+
+    # Completed Programs
+    completed_programs = serializers.SerializerMethodField()
+
+    # Pending Programs
+    pending_programs = serializers.SerializerMethodField()
+
+    # Earn Certificate
+    earned_certificate = serializers.SerializerMethodField()
+
+    current_enrolled_program = serializers.SerializerMethodField()
+
+    def get_enrolled_programs(self, obj):
+        total_enrolled_programs = UserEnrollmentProgram.objects.filter(user=obj.id)
+
+        return total_enrolled_programs.count()
+
+    def get_completed_programs(self, obj):
+        total_completed_programs = UserEnrollmentProgram.objects.filter(
+            user=obj.id,
+        )
+        completed_programs = 0
+
+        for program in total_completed_programs:
+            total_lessons = ProgramModuleWeekLesson.objects.filter(
+                program_module_week__program_module__program=program.program
+            ).count()
+            completed_lessons = UserLearningLessonStatus.objects.filter(
+                user=obj.id,
+                program_module_week_lesson__program_module_week__program_module__program=program.program,
+                status="COMPLETED",
+            ).count()
+
+            # calculate percentage
+            # if all lessons are completed then percentage is 100    and program si done
+            if total_lessons == completed_lessons:
+                completed_programs += 1
+            else:
+                completed_percentage = int((completed_lessons / total_lessons) * 100)
+                if completed_percentage >= 100:
+                    completed_programs += 1
+
+            return completed_programs
+
+        return completed_programs
+
+    def get_pending_programs(self, obj):
+        return 0
+
+    def get_earned_certificate(self, obj):
+        return 0
+
+    def get_current_enrolled_program(self, obj):
+        current_percentage = 0
+        total_percentage = 0
+        completed_lessons = 0
+
+        try:
+            current_enrolled_program = UserEnrollmentProgram.objects.filter(
+                user=obj.id,
+            ).latest("created_at")
+        except UserEnrollmentProgram.DoesNotExist:
+            return {
+                "total_percentage": total_percentage,
+                "completed_lessons": completed_lessons,
+                "total_lessons": 0,
+                "total_sub_modules": 0,
+            }
+
+        current_enrolled_program_all_modules = ProgramModule.objects.filter(
+            program=current_enrolled_program.program,
+        )
+        total_sub_modules = 0
+
+        total_sub_modules = ProgramModuleWeek.objects.filter(
+            program_module__program=current_enrolled_program.program
+        ).count()
+
+        total_lessons = ProgramModuleWeekLesson.objects.filter(
+            program_module_week__program_module__program=current_enrolled_program.program
+        ).count()
+
+        completed_lessons = UserLearningLessonStatus.objects.filter(
+            user=obj.id,
+            program_module_week_lesson__program_module_week__program_module__program=current_enrolled_program.program,
+            status="COMPLETED",
+        ).count()
+
+        if total_lessons > 0:
+            current_percentage = int((completed_lessons / total_lessons) * 100)
+
+        return {
+            "current_percentage": current_percentage,
+            "total_percentage": total_percentage,
+            "completed_lessons": completed_lessons,
+            "total_lessons": total_lessons,
+            "total_sub_modules": total_sub_modules,
+            "program_name": current_enrolled_program.program.name,
+            "program_id": current_enrolled_program.program.id,
+            "program_image": current_enrolled_program.program.image.url,
+            "program_description": current_enrolled_program.program.description,
+        }
+
+    class Meta:
+        model = User
+        fields = [
+            "enrolled_programs",
+            "completed_programs",
+            "pending_programs",
+            "earned_certificate",
+            "current_enrolled_program",
+        ]
 
 
 class GetDUserEnrollmentProgramSerializer(serializers.ModelSerializer):

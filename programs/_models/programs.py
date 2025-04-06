@@ -109,7 +109,9 @@ class UserEnrollmentProgram(BaseModel):
         ("completed", "Completed"),
     )
     status = models.CharField(max_length=10, choices=STATUS, default="pending")
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="user_enrollments"
+    )
     progress_percentage = models.IntegerField(default=0)
     program = models.ForeignKey(
         Program,

@@ -11,7 +11,9 @@ from markdownx.utils import markdownify
 
 
 class ProgramModule(BaseProgramPublication):
-    program = models.ForeignKey(Program, on_delete=models.CASCADE)
+    program = models.ForeignKey(
+        Program, on_delete=models.CASCADE, related_name="modules_set"
+    )
     name = models.CharField(
         max_length=255, null=True, blank=True, default="program-module"
     )
@@ -120,7 +122,7 @@ class UserLearningLessonStatus(BaseProgramPublication):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     program_module_week_lesson = models.ForeignKey(
         ProgramModuleWeekLesson, on_delete=models.CASCADE, related_name="lesson_status"
-    )
+    )   
     status = models.CharField(max_length=40, choices=STATUS, default="NOT_STARTED")
     is_to_be_reviewed = models.BooleanField(default=False)
     pr_url = models.URLField(blank=True, null=True)

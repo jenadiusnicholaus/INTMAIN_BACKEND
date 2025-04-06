@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 
+from authentication.serializers import GetUserSerializer
 from common.models import Stack
 import requests
 import json
@@ -12,11 +13,25 @@ from rest_framework import serializers
 from rest_framework import generics
 
 from menu_manager.models import MenuMeta
-from programs._models.programs import ProgramCategory
+from programs._models.programs import ProgramCategory, UserEnrollmentProgram
 from programs._serializers.program_serializers import (
     GetMenuMetaSerializer,
     GetProgramCategorySerializer,
+    StatsSerializer,
 )
+from django.contrib.auth.models import User
+
+
+class StatsView(generics.RetrieveAPIView):
+    serializer_class = StatsSerializer
+    queryset = User.objects.all()
+    permission_classes = []
+
+    def retrieve(self, request, *args, **kwargs):
+        serializer = self.get_serializer(
+            self.request.user,
+        )
+        return Response(serializer.data)
 
 
 class MenuMetaList(generics.ListAPIView):
