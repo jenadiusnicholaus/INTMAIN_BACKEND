@@ -8,9 +8,9 @@ from rest_framework.decorators import permission_classes
 # Create your views here.
 
 
-class GetMCQSFromText(views.APIView):
+class AIsupport(views.APIView):
     def post(self, request):
         text = request.data["content"]
         api = DeepSeekAPI()
-        mcqs = api.get_response(text)
-        return Response({"mcqs": mcqs})
+        content = api.get_response(text)
+        return Response({"content": content})
