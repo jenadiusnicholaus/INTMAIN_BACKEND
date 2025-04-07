@@ -54,6 +54,11 @@ class Program(BaseProgramPublication):
     def __str__(self):
         return self.name
 
+    def unpackpublication_status(self):
+        key = self.publication_status
+        text = dict(self.PUB_STATUS).get(key)
+        return {"value": key, "text": text}
+
 
 class ProgramRating(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

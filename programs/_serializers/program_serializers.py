@@ -34,6 +34,10 @@ class GetProgramSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
     created_by = GetUserWithPermissionsSerializer(read_only=True)
     stacks = serializers.SerializerMethodField()
+    publication_status = serializers.SerializerMethodField()
+
+    def get_publication_status(self, obj):
+        return obj.unpackpublication_status()
 
     def get_category(self, obj):
         serializer = GetProgramCategorySerializer(obj.category)
@@ -61,6 +65,7 @@ class GetProgramSerializer(serializers.ModelSerializer):
             "is_active",
             "created_at",
             "updated_at",
+            "publication_status",
         ]
 
 
