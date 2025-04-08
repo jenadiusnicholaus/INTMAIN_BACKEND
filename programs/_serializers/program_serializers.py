@@ -553,6 +553,7 @@ class GetProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
             "created_by",
             "publication_status",
             "short_description",
+            "to_be_paid",
         ]
 
     def get_formatted_markdown(self, obj):
