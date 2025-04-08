@@ -29,6 +29,11 @@ class ProgramModule(BaseProgramPublication):
     def __str__(self):
         return self.display_name or self.name
 
+    def unpackpublication_status(self):
+        key = self.publication_status
+        text = dict(self.PUB_STATUS).get(key)
+        return {"value": key, "text": text}
+
 
 class ProgramModuleWeek(BaseProgramPublication):
     program_module = models.ForeignKey(ProgramModule, on_delete=models.CASCADE)
@@ -122,7 +127,7 @@ class UserLearningLessonStatus(BaseProgramPublication):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     program_module_week_lesson = models.ForeignKey(
         ProgramModuleWeekLesson, on_delete=models.CASCADE, related_name="lesson_status"
-    )   
+    )
     status = models.CharField(max_length=40, choices=STATUS, default="NOT_STARTED")
     is_to_be_reviewed = models.BooleanField(default=False)
     pr_url = models.URLField(blank=True, null=True)

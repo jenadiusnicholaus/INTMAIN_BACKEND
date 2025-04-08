@@ -257,6 +257,7 @@ class TutorProgramModuleViewSet(viewsets.ModelViewSet):
             "publication_status": request.data.get(
                 "publication_status", module.publication_status
             ),
+            "program": request.data.get("program_id", module.program.id),
             "description": request.data.get("md_description", module.description),
             "order": request.data.get("order", module.order),
             "updated_by": request.user.id,
