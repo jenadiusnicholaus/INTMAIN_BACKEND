@@ -357,10 +357,10 @@ class GetProgramRatingSerializer(serializers.ModelSerializer):
 class GetProgramModuleWithOutSubModulesSerializer(serializers.ModelSerializer):
     program_name = serializers.CharField(source="program.name")
     meta = GetMenuMetaSerializer()
-    publication_status = serializers.SerializerMethodField()
+    # publication_status = serializers.SerializerMethodField()
 
-    def get_publication_status(self, obj):
-        return obj.program.unpackpublication_status()
+    # def get_publication_status(self, obj):
+    #     return obj.program.unpackpublication_status()
 
     class Meta:
         model = ProgramModule
