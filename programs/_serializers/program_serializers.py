@@ -503,17 +503,17 @@ class GetProgramFeedbackSerializer(serializers.ModelSerializer):
 
 
 class GetProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
-    program_module_week_id = serializers.IntegerField(source="program_module_week.id")
-    program_module_week_name = serializers.CharField(
-        source="program_module_week.program_module.name"
-    )
+    # program_module_week_id = serializers.IntegerField(source="program_module_week.id")
+    # program_module_week_name = serializers.CharField(
+    #     source="program_module_week.program_module.name"
+    # )
     # program_module_week_description = serializers.CharField(
     #     source="program_module_week.program_module.description"
     # )
 
-    program_module_week_order = serializers.IntegerField(
-        source="program_module_week.order"
-    )
+    # program_module_week_order = serializers.IntegerField(
+    #     source="program_module_week.order"
+    # )
     name = serializers.CharField()
     description = serializers.CharField()
     order = serializers.IntegerField()
@@ -524,6 +524,8 @@ class GetProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
     is_optional = serializers.BooleanField()
     formatted_markdown = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
+    sub_module_name = serializers.CharField(source="program_module_week.display_name")
+    sub_module_id = serializers.IntegerField(source="program_module_week.id")
 
     def get_status(self, obj):
         status = obj.lesson_status.filter(user=self.context.get("request").user).first()
@@ -532,7 +534,26 @@ class GetProgramModuleWeekLessonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProgramModuleWeekLesson
-        fields = "__all__"
+        fields = [
+            "id",
+            "name",
+            "description",
+            "order",
+            "learning_model",
+            "lesson_type",
+            "duration",
+            "is_active",
+            "is_optional",
+            "formatted_markdown",
+            "status",
+            "sub_module_name",
+            "sub_module_id",
+            "created_at",
+            "updated_at",
+            "created_by",
+            "publication_status",
+            "short_description",
+        ]
 
     def get_formatted_markdown(self, obj):
         request = self.context.get("request")
