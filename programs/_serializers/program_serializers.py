@@ -467,10 +467,22 @@ class GetDProgramModuleWeekSerializer(serializers.ModelSerializer):
 
 class GetProgramModuleWeekSerializer(serializers.ModelSerializer):
     meta = GetMenuMetaSerializer()
+    program_module_id = serializers.IntegerField(source="program_module.id")
+    program_module_name = serializers.CharField(source="program_module.display_name")
 
     class Meta:
         model = ProgramModuleWeek
-        fields = ["id", "name", "display_name", "order", "meta", "description"]
+        fields = [
+            "id",
+            "name",
+            "display_name",
+            "order",
+            "meta",
+            "description",
+            "publication_status",
+            "program_module_id",
+            "program_module_name",
+        ]
 
 
 class CreateProgramModuleWeekSerializer(serializers.ModelSerializer):
