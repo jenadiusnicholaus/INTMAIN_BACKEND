@@ -35,6 +35,7 @@ class GetProgramSerializer(serializers.ModelSerializer):
     created_by = GetUserWithPermissionsSerializer(read_only=True)
     stacks = serializers.SerializerMethodField()
     publication_status = serializers.SerializerMethodField()
+    detailed_description = serializers.SerializerMethodField()
 
     def get_publication_status(self, obj):
         return obj.unpackpublication_status()
@@ -47,6 +48,12 @@ class GetProgramSerializer(serializers.ModelSerializer):
         stacks = obj.program_stacks.all()
         serializer = GetProgramStackSerializer(stacks, many=True)
         return serializer.data
+
+    def get_detailed_description(self, obj):
+
+        more_info = obj.more_info_set.filter().first()
+        serializer = GetProgramMoreInfoSerializer(more_info)
+        return serializer.data["more_info"]
 
     class Meta:
         model = Program
@@ -66,6 +73,7 @@ class GetProgramSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "publication_status",
+            "detailed_description",
         ]
 
 

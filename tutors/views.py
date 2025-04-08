@@ -146,6 +146,8 @@ class TutorProgramModelViewSet(viewsets.ModelViewSet):
         if image and image.strip():
             program_data["image"] = image
 
+        stacks = request.data.get("program_stacks")
+
         with transaction.atomic():
             program_serializer = UpdateProgramSerializer(
                 instance=program, data=program_data, partial=True
@@ -158,6 +160,15 @@ class TutorProgramModelViewSet(viewsets.ModelViewSet):
                 more_info=request.data.get("md_description"),
                 updated_by=request.user.id,
             )
+
+            # upated if the stacks exist and add if not
+
+            if len(stacks) > 0:
+                for stack in stacks:
+                    stack_obj, created = ProgramStack.objects.get_or_create(
+                        stack_id=stack.get("stack_id"),
+                        program_id=updated_program.id,
+                    )
 
         return Response(
             {
