@@ -4,7 +4,7 @@ from .views import (
     ModuleWeekViewSet,
     TutorProgramModelViewSet,
     TutorProgramModuleViewSet,
-    TutorProgramSubModeleLessonViewSet,
+    TutorProgramSubModuleLessonViewSet,
 )
 
 router = routers.DefaultRouter()
@@ -17,7 +17,7 @@ router.register(
 )
 router.register(
     r"program-module-week-lesson-vset",
-    TutorProgramSubModeleLessonViewSet,
+    TutorProgramSubModuleLessonViewSet,
     basename="program-module-week-lessons",
 )
 

@@ -399,7 +399,7 @@ class ModuleWeekViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError("Sub-module does not exist")
 
 
-class TutorProgramSubModeleLessonViewSet(viewsets.ModelViewSet):
+class TutorProgramSubModuleLessonViewSet(viewsets.ModelViewSet):
     queryset = ProgramModuleWeekLesson.objects.all()
     serializer_class = GetProgramModuleWeekLessonSerializer
     permission_classes = [IsAuthenticated, IsTutorOrIsAdminUser]
@@ -476,6 +476,7 @@ class TutorProgramSubModeleLessonViewSet(viewsets.ModelViewSet):
             "short_description": request.data.get(
                 "short_description", lesson.short_description
             ),
+            "program_module_week": request.data.get("sub_module_id"),
             "order": request.data.get("order", lesson.order),
             "learning_model": request.data.get("learning_model", lesson.learning_model),
             "lesson_type": request.data.get("lesson_type", lesson.lesson_type),
